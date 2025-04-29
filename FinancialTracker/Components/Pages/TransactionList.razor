@@ -11,6 +11,20 @@
     </NavLink>
 </div>
 
+<div class="flex justify-end mb-4">
+    <NavLink href="/categories">
+        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            ➕ Dodaj Kategoriju
+        </button>
+    </NavLink>
+</div>
+
+<div class="flex justify-end mb-4">
+    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    @onclick="async () => await DeleteAllTransactions()">
+        Izbrisi sve
+    </button>
+</div>
 
 <h2 class="text-xl font-bold mb-4">Sve Transakcije</h2>
 
@@ -36,8 +50,8 @@ else
                     <div>Napomena: @t.Note</div>
                 }
                 <button title="Obriši transakciju"
-                        class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 mt-2"
-                        @onclick="async () => await DeleteTransaction(t.Id)">
+                class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 mt-2"
+                @onclick="async () => await DeleteTransaction(t.Id)">
                     🗑️ Obriši
                 </button>
 
@@ -57,6 +71,17 @@ else
     private async Task DeleteTransaction(int id)
     {
         await TransactionService.DeleteTransaction(id);
+        transactions = await TransactionService.GetTransactions();
+    }
+
+    private async Task DeleteAllTransactions()
+    {
+        await TransactionService.DeleteAllTransactions();
+        transactions = await TransactionService.GetTransactions();
+    }
+
+    private async Task RefreshTransactions()
+    {
         transactions = await TransactionService.GetTransactions();
     }
 }
