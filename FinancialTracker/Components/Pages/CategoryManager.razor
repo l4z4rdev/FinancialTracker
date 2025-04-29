@@ -1,0 +1,82 @@
+﻿@page "/categories"
+@using FinancialTracker.Models
+@using FinancialTracker.Services
+@inject NavigationManager Navigation
+@inject TransactionService TransactionService
+
+<h2 class="text-xl font-bold mb-4">Kategorije</h2>
+
+<EditForm Model="newCategory" OnValidSubmit="AddCategory">
+    <div class="flex space-x-2 mb-4">
+        <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
+        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ Dodaj</button>
+    </div>
+</EditForm>
+
+<button type="button" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                    @onclick="GoBack">
+                🔙 Otkaži
+            </button>
+
+@if (categories == null)
+{
+    <p>Učitavanje...</p>
+}
+else if (!categories.Any())
+{
+	<p>Nema unetih kategorija.</p>
+}
+else
+{
+	<p>Unete kategorije:</p>
+}
+
+<ul class="space-y-2">
+    @foreach (var cat in categories)
+    {
+        <li class="flex justify-between items-center bg-gray-100 p-2 rounded">
+            <InputText @bind-Value="cat.Name" class="flex-1 mr-2" />
+            <button @onclick="() => UpdateCategory(cat)" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">💾</button>
+            <button @onclick="() => DeleteCategory(cat.Id)" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">🗑️</button>
+        </li>
+    }
+</ul>
+
+@code {
+    private Category newCategory = new();
+    private List<Category> categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await TransactionService.GetCategories();
+    }
+
+	private async Task GoBack()
+	{
+		Navigation.NavigateTo("/");
+	}
+
+	private async Task AddCategory()
+    {
+        if (!string.IsNullOrWhiteSpace(newCategory.Name))
+        {
+            await TransactionService.AddCategory(newCategory);
+            newCategory = new();
+            categories = await TransactionService.GetCategories();
+        }
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        await TransactionService.DeleteCategory(id);
+        categories = await TransactionService.GetCategories();
+    }
+
+    private async Task UpdateCategory(Category category)
+    {
+        if (!string.IsNullOrWhiteSpace(category.Name))
+        {
+            await TransactionService.UpdateCategory(category);
+        }
+    }
+}

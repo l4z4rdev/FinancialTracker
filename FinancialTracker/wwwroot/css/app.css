@@ -1,5 +1,7 @@
 ﻿html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #262624;
+    color: white;
 }
 
 .input {
@@ -7,6 +9,11 @@
     padding: 8px;
     border-radius: 6px;
     border: 1px solid #ccc;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
 }
 
 a, .btn-link {

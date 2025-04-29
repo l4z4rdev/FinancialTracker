@@ -12,15 +12,22 @@
         <InputNumber @bind-Value="newTransaction.Amount" placeholder="Iznos" class="input" />
 
         <InputSelect @bind-Value="newTransaction.Type" class="input">
+            <option value="">-- Odaberi --</option>
             <option value="Income">Prihod</option>
             <option value="Expense">Rashod</option>
         </InputSelect>
 
-        <InputText @bind-Value="newTransaction.Category" placeholder="Kategorija" class="input" />
+        <InputSelect @bind-Value="selectedCategoryName" class="input">
+            <option value="">-- Odaberi kategoriju --</option>
+            @foreach (var cat in categories)
+            {
+                <option value="@cat.Name">@cat.Name</option>
+            }
+        </InputSelect>
 
         <InputDate @bind-Value="newTransaction.Date" class="input" />
 
-        <InputText @bind-Value="newTransaction.Note" placeholder="Napomena (opciono)" class="input" />
+        <InputText @bind-Value="newTransaction.Note" placeholder="Napomena" class="input" />
 
         <div class="flex space-x-2">
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
@@ -36,17 +43,29 @@
     </div>
 </EditForm>
 
-
 @code {
     private Transaction newTransaction = new()
         {
-            Date = DateTime.Today
+            Date = DateTime.Now
         };
+
+    private List<Category> categories = new();
+
+    private string selectedCategoryName
+    {
+        get => newTransaction.Category;
+        set => newTransaction.Category = value;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await TransactionService.GetCategories();
+    }
 
     private async Task HandleValidSubmit()
     {
         await TransactionService.AddTransaction(newTransaction);
-        Navigation.NavigateTo("/"); // vrati se na listu
+        Navigation.NavigateTo("/");
     }
 
     private void GoBack()
