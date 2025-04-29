@@ -1,0 +1,41 @@
+﻿@page "/"
+@using FinancialTracker.Services
+@using FinancialTracker.Models
+@inject TransactionService TransactionService
+
+<h2 class="text-xl font-bold mb-4">Sve Transakcije</h2>
+
+@if (transactions == null)
+{
+    <p>Učitavanje...</p>
+}
+else if (!transactions.Any())
+{
+    <p>Nema unetih transakcija.</p>
+}
+else
+{
+    <ul class="space-y-2">
+        @foreach (var t in transactions)
+        {
+            <li class="border p-3 rounded shadow-sm">
+                <div><strong>@t.Type</strong> - @t.Amount.ToString("0.00") RSD</div>
+                <div>Kategorija: @t.Category</div>
+                <div>Datum: @t.Date.ToShortDateString()</div>
+                @if (!string.IsNullOrWhiteSpace(t.Note))
+                {
+                    <div>Napomena: @t.Note</div>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Transaction> transactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        transactions = await TransactionService.GetTransactions();
+    }
+}
