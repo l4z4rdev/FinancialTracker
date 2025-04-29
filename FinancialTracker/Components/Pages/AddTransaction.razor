@@ -1,0 +1,56 @@
+﻿@page "/add"
+@using FinancialTracker.Models
+@using FinancialTracker.Services
+@inject TransactionService TransactionService
+@inject NavigationManager Navigation
+@inject TransactionService TransactionService
+
+<h2 class="text-xl font-bold mb-4">Dodaj Transakciju</h2>
+
+<EditForm Model="newTransaction" OnValidSubmit="HandleValidSubmit">
+    <div class="space-y-4">
+        <InputNumber @bind-Value="newTransaction.Amount" placeholder="Iznos" class="input" />
+
+        <InputSelect @bind-Value="newTransaction.Type" class="input">
+            <option value="Income">Prihod</option>
+            <option value="Expense">Rashod</option>
+        </InputSelect>
+
+        <InputText @bind-Value="newTransaction.Category" placeholder="Kategorija" class="input" />
+
+        <InputDate @bind-Value="newTransaction.Date" class="input" />
+
+        <InputText @bind-Value="newTransaction.Note" placeholder="Napomena (opciono)" class="input" />
+
+        <div class="flex space-x-2">
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                💾 Sačuvaj
+            </button>
+
+            <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                    @onclick="GoBack">
+                🔙 Otkaži
+            </button>
+        </div>
+
+    </div>
+</EditForm>
+
+
+@code {
+    private Transaction newTransaction = new()
+        {
+            Date = DateTime.Today
+        };
+
+    private async Task HandleValidSubmit()
+    {
+        await TransactionService.AddTransaction(newTransaction);
+        Navigation.NavigateTo("/"); // vrati se na listu
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
