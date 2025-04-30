@@ -4,19 +4,14 @@
 @inject NavigationManager Navigation
 @inject TransactionService TransactionService
 
-<h2 class="text-xl font-bold mb-4">Kategorije</h2>
+<h2>Kategorije</h2>
 
 <EditForm Model="newCategory" OnValidSubmit="AddCategory">
-    <div class="flex space-x-2 mb-4">
+    <div class="space-x-2 mb-4">
         <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
-        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ Dodaj</button>
+        <button class="btn btn-primary">➕ Dodaj</button>
     </div>
 </EditForm>
-
-<button type="button" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                    @onclick="GoBack">
-                🔙 Otkaži
-            </button>
 
 @if (categories == null)
 {
@@ -24,23 +19,25 @@
 }
 else if (!categories.Any())
 {
-	<p>Nema unetih kategorija.</p>
+    <p>Nema unetih kategorija.</p>
 }
 else
 {
-	<p>Unete kategorije:</p>
-}
+    <p class="mb-2">Unete kategorije:</p>
 
-<ul class="space-y-2">
-    @foreach (var cat in categories)
-    {
-        <li class="flex justify-between items-center bg-gray-100 p-2 rounded">
-            <InputText @bind-Value="cat.Name" class="flex-1 mr-2" />
-            <button @onclick="() => UpdateCategory(cat)" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">💾</button>
-            <button @onclick="() => DeleteCategory(cat.Id)" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">🗑️</button>
-        </li>
-    }
-</ul>
+    <ul class="category-list">
+        @foreach (var cat in categories)
+        {
+            <li class="category-item">
+                <InputText @bind-Value="cat.Name" class="input flex-1 mr-2 mb-0" />
+                <div class="space-x-2">
+                    <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">💾</button>
+                    <button @onclick="() => DeleteCategory(cat.Id)" class="btn btn-danger btn-sm">🗑️</button>
+                </div>
+            </li>
+        }
+    </ul>
+}
 
 @code {
     private Category newCategory = new();
@@ -51,12 +48,7 @@ else
         categories = await TransactionService.GetCategories();
     }
 
-	private async Task GoBack()
-	{
-		Navigation.NavigateTo("/");
-	}
-
-	private async Task AddCategory()
+    private async Task AddCategory()
     {
         if (!string.IsNullOrWhiteSpace(newCategory.Name))
         {

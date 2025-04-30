@@ -1,9 +1,29 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
+    <div class="app-header">
+        Praćenje finansija
+    </div>
+
     <main>
-        <article class="content px-4">
+        <article class="content">
             @Body
         </article>
     </main>
+
+    <div class="bottom-navbar">
+        <NavLink href="/" class="nav-item" Match="NavLinkMatch.All">
+            <span class="icon">📊</span>
+            <span>Pregled</span>
+        </NavLink>
+        <NavLink href="/categories" class="nav-item">
+            <span class="icon">🏷️</span>
+            <span>Kategorije</span>
+        </NavLink>
+        <NavLink href="/settings" class="nav-item">
+            <span class="icon">⚙️</span>
+            <span>Dodaj</span>
+        </NavLink>
+        
+    </div>
 </div>
