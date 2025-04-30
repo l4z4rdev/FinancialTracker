@@ -8,14 +8,20 @@
 <h2 class="text-xl font-bold mb-4">Dodaj Transakciju</h2>
 
 <EditForm Model="newTransaction" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
     <div class="space-y-4">
         <InputNumber @bind-Value="newTransaction.Amount" placeholder="Iznos" class="input" />
+		<ValidationMessage For="@(() => newTransaction.Amount)" />
+
+        <InputText @bind-Value="newTransaction.Name" placeholder="Naziv" class="input" />
+        <ValidationMessage For="@(() => newTransaction.Name)" />
 
         <InputSelect @bind-Value="newTransaction.Type" class="input">
-            <option value="">-- Odaberi --</option>
             <option value="Income">Prihod</option>
             <option value="Expense">Rashod</option>
         </InputSelect>
+        <ValidationMessage For="@(() => newTransaction.Type)" />
 
         <InputSelect @bind-Value="selectedCategoryName" class="input">
             <option value="">-- Odaberi kategoriju --</option>
@@ -24,10 +30,13 @@
                 <option value="@cat.Name">@cat.Name</option>
             }
         </InputSelect>
+        <ValidationMessage For="@(() => newTransaction.Category)" />
 
         <InputDate @bind-Value="newTransaction.Date" class="input" />
+        <ValidationMessage For="@(() => newTransaction.Date)" />
 
         <InputText @bind-Value="newTransaction.Note" placeholder="Napomena" class="input" />
+        <ValidationMessage For="@(() => newTransaction.Note)" />
 
         <div class="flex space-x-2">
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
