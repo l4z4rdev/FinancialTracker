@@ -3,57 +3,40 @@
 @using FinancialTracker.Models
 @inject TransactionService TransactionService
 
-<h2 class="text-xl font-bold mb-2">Pregled</h2>
-
-<div class="grid grid-cols-3 gap-4 mb-6">
-    <div class="bg-green-100 p-4 rounded shadow">
-        <div class="text-green-700 font-semibold">Ukupni Prihodi</div>
-        <div class="text-xl font-bold text-green-900">@TotalIncome.ToString("0.00") RSD</div>
+<div class="stats-container">
+    <div class="stat-card income-card">
+        <div class="stat-label">Ukupni Prihodi</div>
+        <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
     </div>
 
-    <div class="bg-red-100 p-4 rounded shadow">
-        <div class="text-red-700 font-semibold">Ukupni Rashodi</div>
-        <div class="text-xl font-bold text-red-900">@TotalExpense.ToString("0.00") RSD</div>
+    <div class="stat-card expense-card">
+        <div class="stat-label">Ukupni Rashodi</div>
+        <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
     </div>
 
-    <div class="bg-blue-100 p-4 rounded shadow">
-        <div class="text-blue-700 font-semibold">Balans</div>
-        <div class="text-xl font-bold text-blue-900">@Balance.ToString("0.00") RSD</div>
+    <div class="stat-card balance-card">
+        <div class="stat-label">Balans</div>
+        <div class="stat-value balance-value">@Balance.ToString("0.00") RSD</div>
     </div>
 </div>
 
-
-<div class="flex justify-end mb-4">
+<div class="action-buttons">
     <NavLink href="/add">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button class="btn btn-primary">
             ➕ Dodaj Transakciju
         </button>
     </NavLink>
-</div>
 
-<div class="flex justify-end mb-4">
-    <NavLink href="/categories">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            ➕ Dodaj Kategoriju
-        </button>
-    </NavLink>
-</div>
+    <button class="btn btn-danger" @onclick="async () => await DeleteAllTransactions()">
+        🗑️ Izbriši sve
+    </button>
 
-<div class="flex justify-end mb-4">
-    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-    @onclick="async () => await DeleteAllTransactions()">
-        Izbrisi sve
+    <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
+        🔄 Osveži
     </button>
 </div>
 
-<div class="flex justify-end mb-4">
-    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            @onclick="async () => await RefreshTransactions()">
-        Osveži listu transakcija
-    </button>
-</div>
-
-<h2 class="text-xl font-bold mb-4">Sve Transakcije</h2>
+<h2>Sve Transakcije</h2>
 
 @if (transactions == null)
 {
@@ -65,24 +48,31 @@ else if (!transactions.Any())
 }
 else
 {
-    <ul class="space-y-2">
+    <ul class="transaction-list">
         @foreach (var t in transactions)
         {
-            <li class="border p-3 rounded shadow-sm">
-                <h1>@t.Name</h1>
-                <div><strong>@t.Type</strong> - @t.Amount.ToString("0.00") RSD</div>
-                <div>Kategorija: @t.Category</div>
-                <div>Datum: @t.Date.ToShortDateString()</div>
-                @if (!string.IsNullOrWhiteSpace(t.Note))
-                {
-                    <div>Napomena: @t.Note</div>
-                }
-                <button title="Obriši transakciju"
-                class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 mt-2"
-                @onclick="async () => await DeleteTransaction(t.Id)">
-                    🗑️ Obriši
-                </button>
+            <li class="transaction-item @(t.Type == TransactionType.Income ? "income" : "expense")">
+                <div class="transaction-header">
+                    <h3 class="transaction-title">@t.Name</h3>
+                    <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
+                        @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
+                    </div>
+                </div>
 
+                <div class="transaction-details">
+                    <div>Kategorija: @t.Category</div>
+                    @if (!string.IsNullOrWhiteSpace(t.Note))
+                    {
+                        <div>Napomena: @t.Note</div>
+                    }
+                </div>
+
+                <div class="transaction-footer">
+                    <div class="transaction-date">@t.Date.ToShortDateString()</div>
+                    <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteTransaction(t.Id)">
+                        🗑️ Obriši
+                    </button>
+                </div>
             </li>
         }
     </ul>

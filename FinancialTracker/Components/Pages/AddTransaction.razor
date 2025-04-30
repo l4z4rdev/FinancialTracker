@@ -3,52 +3,61 @@
 @using FinancialTracker.Services
 @inject TransactionService TransactionService
 @inject NavigationManager Navigation
-@inject TransactionService TransactionService
 
-<h2 class="text-xl font-bold mb-4">Dodaj Transakciju</h2>
+<h2>Dodaj Transakciju</h2>
 
 <EditForm Model="newTransaction" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
     <div class="space-y-4">
-        <InputNumber @bind-Value="newTransaction.Amount" placeholder="Iznos" class="input" />
-		<ValidationMessage For="@(() => newTransaction.Amount)" />
+        <div>
+            <InputNumber @bind-Value="newTransaction.Amount" placeholder="Iznos" class="input" />
+            <ValidationMessage For="@(() => newTransaction.Amount)" />
+        </div>
 
-        <InputText @bind-Value="newTransaction.Name" placeholder="Naziv" class="input" />
-        <ValidationMessage For="@(() => newTransaction.Name)" />
+        <div>
+            <InputText @bind-Value="newTransaction.Name" placeholder="Naziv" class="input" />
+            <ValidationMessage For="@(() => newTransaction.Name)" />
+        </div>
 
-        <InputSelect @bind-Value="newTransaction.Type" class="input">
-            <option value="Income">Prihod</option>
-            <option value="Expense">Rashod</option>
-        </InputSelect>
-        <ValidationMessage For="@(() => newTransaction.Type)" />
+        <div>
+            <InputSelect @bind-Value="newTransaction.Type" class="input">
+                <option value="Income">Prihod</option>
+                <option value="Expense">Rashod</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => newTransaction.Type)" />
+        </div>
 
-        <InputSelect @bind-Value="selectedCategoryName" class="input">
-            <option value="">-- Odaberi kategoriju --</option>
-            @foreach (var cat in categories)
-            {
-                <option value="@cat.Name">@cat.Name</option>
-            }
-        </InputSelect>
-        <ValidationMessage For="@(() => newTransaction.Category)" />
+        <div>
+            <InputSelect @bind-Value="selectedCategoryName" class="input">
+                <option value="">-- Odaberi kategoriju --</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat.Name">@cat.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => newTransaction.Category)" />
+        </div>
 
-        <InputDate @bind-Value="newTransaction.Date" class="input" />
-        <ValidationMessage For="@(() => newTransaction.Date)" />
+        <div>
+            <InputDate @bind-Value="newTransaction.Date" class="input" />
+            <ValidationMessage For="@(() => newTransaction.Date)" />
+        </div>
 
-        <InputText @bind-Value="newTransaction.Note" placeholder="Napomena" class="input" />
-        <ValidationMessage For="@(() => newTransaction.Note)" />
+        <div>
+            <InputText @bind-Value="newTransaction.Note" placeholder="Napomena" class="input" />
+            <ValidationMessage For="@(() => newTransaction.Note)" />
+        </div>
 
-        <div class="flex space-x-2">
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        <div class="space-x-2">
+            <button type="submit" class="btn btn-primary">
                 💾 Sačuvaj
             </button>
 
-            <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                    @onclick="GoBack">
+            <button type="button" class="btn btn-secondary" @onclick="GoBack">
                 🔙 Otkaži
             </button>
         </div>
-
     </div>
 </EditForm>
 
