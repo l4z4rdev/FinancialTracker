@@ -1,0 +1,66 @@
+﻿@page "/info"
+@using FinancialTracker.Services
+@using FinancialTracker.Models
+@inject TransactionService TransactionService
+
+<h2>📘 O aplikaciji</h2>
+<p>Finansijski Tracker vam omogućava da pratite prihode, rashode i štednju.</p>
+
+<h3>Uputstvo</h3>
+<ul>
+    <li>➕ Dodajte transakcije putem glavnog ekrana</li>
+    <li>📊 Pratite balans i pregled po kategorijama</li>
+    <li>⚙️ Podesite dnevni limit troškova</li>
+</ul>
+
+<h3>🗑️ Brisanje podataka</h3>
+<button class="btn btn-danger" @onclick='() => ConfirmDelete("transactions")'>Obriši sve transakcije</button>
+<button class="btn btn-danger" @onclick='() => ConfirmDelete("categories")'>Obriši sve kategorije</button>
+<button class="btn btn-danger" @onclick='() => ConfirmDelete("savings")'>Obriši sve štednje</button>
+
+
+@if (ShowConfirm)
+{
+    <div style="margin-top:1em; padding:1em; border:1px solid #aaa; border-radius:8px; background:#f8f8f8;">
+        <p>⚠️ Da li ste sigurni da želite da obrišete <strong>@DeleteTargetText</strong>?</p>
+        <button class="btn btn-danger" @onclick="DeleteConfirmed">Da</button>
+        <button class="btn btn-secondary" @onclick="() => ShowConfirm = false">Ne</button>
+    </div>
+}
+
+@code {
+    private bool ShowConfirm = false;
+    private string DeleteTarget = "";
+    private string DeleteTargetText = "";
+
+    private void ConfirmDelete(string target)
+    {
+        DeleteTarget = target;
+        DeleteTargetText = target switch
+        {
+            "transactions" => "sve transakcije",
+            "categories" => "sve kategorije",
+            "savings" => "sve štednje",
+            _ => "nepoznato"
+        };
+        ShowConfirm = true;
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        ShowConfirm = false;
+
+        switch (DeleteTarget)
+        {
+            case "transactions":
+                await TransactionService.DeleteAllTransactions();
+                break;
+            case "categories":
+                await TransactionService.DeleteAllCategories();
+                break;
+            case "savings":
+                await TransactionService.DeleteAllSavings();
+                break;
+        }
+    }
+}

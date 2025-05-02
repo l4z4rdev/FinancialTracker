@@ -1,0 +1,390 @@
+﻿@page "/savings"
+@using FinancialTracker.Models
+@using FinancialTracker.Services
+@inject TransactionService TransactionService
+@inject IJSRuntime JSRuntime
+
+<div class="page">
+    <h2>Štednja</h2>
+    <main>
+        <div class="action-buttons">
+            <button class="btn btn-primary" @onclick="() => OpenAddSavingDialog()">Nova štednja</button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-container" style="height: 50vh;">
+                <div class="loading-spinner"></div>
+                <p>Učitavanje...</p>
+            </div>
+        }
+        else if (savings == null || !savings.Any())
+        {
+            <div class="text-center mt-2">
+                <p>Nema aktivnih štednji.</p>
+            </div>
+        }
+        else
+        {
+            <h2>Aktivne štednje</h2>
+            <div class="savings-list">
+                @foreach (var saving in savings.Where(s => !s.IsCompleted))
+                {
+                    <div class="saving-item">
+                        <div class="saving-header">
+                            <h3 class="saving-title">@saving.Name</h3>
+                            <span class="saving-amount">
+                                @saving.CurrentAmount.ToString("N2") / @saving.TargetAmount.ToString("N2") RSD
+                            </span>
+                        </div>
+                        <div class="saving-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: @GetProgressPercent(saving)%"></div>
+                            </div>
+                            <span class="progress-percent">@GetProgressPercent(saving)%</span>
+                        </div>
+                        <div class="saving-actions">
+                            <button class="btn btn-primary btn-sm" @onclick="() => OpenAddFundsDialog(saving)">
+                                <i class="fas fa-plus"></i> Dodaj
+                            </button>
+                            <button class="btn btn-secondary btn-sm" @onclick="() => OpenEditSavingDialog(saving)">
+                                <i class="fas fa-edit"></i> Izmeni
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteSaving(saving)">
+                                <i class="fas fa-trash"></i> Obriši
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (savings.Any(s => s.IsCompleted))
+            {
+                <h2>Završene štednje</h2>
+                <div class="savings-list">
+                    @foreach (var saving in savings.Where(s => s.IsCompleted))
+                    {
+                        <div class="saving-item completed">
+                            <div class="saving-header">
+                                <h3 class="saving-title">@saving.Name</h3>
+                                <span class="saving-amount">
+                                    @saving.CurrentAmount.ToString("N2") / @saving.TargetAmount.ToString("N2") RSD
+                                </span>
+                            </div>
+                            <div class="saving-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%"></div>
+                                </div>
+                                <span class="progress-percent">100%</span>
+                            </div>
+                            <div class="saving-actions">
+                                <button class="btn btn-secondary btn-sm" @onclick="() => OpenEditSavingDialog(saving)">
+                                    <i class="fas fa-edit"></i> Izmeni
+                                </button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteSaving(saving)">
+                                    <i class="fas fa-trash"></i> Obriši
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (showAddSavingDialog)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>Nova štednja</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="savingName">Naziv štednje</label>
+                            <input id="savingName" class="input" type="text" @bind="newSaving.Name" />
+                            @if (!string.IsNullOrEmpty(savingNameError))
+                            {
+                                <div class="validation-message">@savingNameError</div>
+                            }
+                        </div>
+                        <div class="form-group">
+                            <label for="targetAmount">Ciljani iznos</label>
+                            <input id="targetAmount" class="input" type="number" step="0.01" @bind="newSaving.TargetAmount" />
+                            @if (!string.IsNullOrEmpty(targetAmountError))
+                            {
+                                <div class="validation-message">@targetAmountError</div>
+                            }
+                        </div>
+                        <div class="form-group">
+                            <label for="initialAmount">Početni iznos (opciono)</label>
+                            <input id="initialAmount" class="input" type="number" step="0.01" @bind="newSaving.CurrentAmount" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CloseAddSavingDialog">Otkaži</button>
+                        <button class="btn btn-primary" @onclick="SaveNewSaving">Sačuvaj</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showEditSavingDialog)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>Izmena štednje</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="editSavingName">Naziv štednje</label>
+                            <input id="editSavingName" class="input" type="text" @bind="editSaving.Name" />
+                            @if (!string.IsNullOrEmpty(savingNameError))
+                            {
+                                <div class="validation-message">@savingNameError</div>
+                            }
+                        </div>
+                        <div class="form-group">
+                            <label for="editTargetAmount">Ciljani iznos</label>
+                            <input id="editTargetAmount" class="input" type="number" step="0.01" @bind="editSaving.TargetAmount" />
+                            @if (!string.IsNullOrEmpty(targetAmountError))
+                            {
+                                <div class="validation-message">@targetAmountError</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CloseEditSavingDialog">Otkaži</button>
+                        <button class="btn btn-primary" @onclick="UpdateSaving">Sačuvaj</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showAddFundsDialog)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>Dodavanje iznosa</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Dodaj iznos u štednju: <strong>@selectedSaving?.Name</strong></p>
+                        <div class="form-group">
+                            <label for="amountToAdd">Iznos</label>
+                            <input id="amountToAdd" class="input" type="number" step="0.01" @bind="amountToAdd" />
+                            @if (!string.IsNullOrEmpty(amountError))
+                            {
+                                <div class="validation-message">@amountError</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CloseAddFundsDialog">Otkaži</button>
+                        <button class="btn btn-primary" @onclick="AddFundsToSaving">Dodaj</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showDeleteConfirmation)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>Potvrda brisanja</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Da li ste sigurni da želite da obrišete štednju: <strong>@selectedSaving?.Name</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CancelDeleteSaving">Otkaži</button>
+                        <button class="btn btn-danger" @onclick="DeleteSaving">Obriši</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
+</div>
+
+@code {
+    private List<Saving> savings;
+    private bool isLoading = true;
+
+    // Dialog control
+    private bool showAddSavingDialog = false;
+    private bool showEditSavingDialog = false;
+    private bool showAddFundsDialog = false;
+    private bool showDeleteConfirmation = false;
+
+    // Form data
+    private Saving newSaving = new Saving();
+    private Saving editSaving = new Saving();
+    private Saving selectedSaving;
+    private decimal amountToAdd;
+
+    // Validation
+    private string savingNameError;
+    private string targetAmountError;
+    private string amountError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSavings();
+    }
+
+    private async Task LoadSavings()
+    {
+        isLoading = true;
+        savings = await TransactionService.GetSavings();
+        isLoading = false;
+    }
+
+    private double GetProgressPercent(Saving saving)
+    {
+        if (saving.TargetAmount <= 0)
+            return 0;
+
+        double percent = (double)(saving.CurrentAmount / saving.TargetAmount * 100);
+        return Math.Min(Math.Round(percent, 1), 100);
+    }
+
+    // Add Saving Dialog
+    private void OpenAddSavingDialog()
+    {
+        newSaving = new Saving();
+        ClearValidationErrors();
+        showAddSavingDialog = true;
+    }
+
+    private void CloseAddSavingDialog()
+    {
+        showAddSavingDialog = false;
+    }
+
+    private async Task SaveNewSaving()
+    {
+        if (ValidateSaving(newSaving))
+        {
+            await TransactionService.AddSaving(newSaving);
+            await LoadSavings();
+            showAddSavingDialog = false;
+        }
+    }
+
+    // Edit Saving Dialog
+    private void OpenEditSavingDialog(Saving saving)
+    {
+        editSaving = new Saving
+            {
+                Id = saving.Id,
+                Name = saving.Name,
+                TargetAmount = saving.TargetAmount,
+                CurrentAmount = saving.CurrentAmount
+            };
+        ClearValidationErrors();
+        showEditSavingDialog = true;
+    }
+
+    private void CloseEditSavingDialog()
+    {
+        showEditSavingDialog = false;
+    }
+
+    private async Task UpdateSaving()
+    {
+        if (ValidateSaving(editSaving))
+        {
+            await TransactionService.UpdateSaving(editSaving);
+            await LoadSavings();
+            showEditSavingDialog = false;
+        }
+    }
+
+    // Add Funds Dialog
+    private void OpenAddFundsDialog(Saving saving)
+    {
+        selectedSaving = saving;
+        amountToAdd = 0;
+        amountError = string.Empty;
+        showAddFundsDialog = true;
+    }
+
+    private void CloseAddFundsDialog()
+    {
+        showAddFundsDialog = false;
+    }
+
+    private async Task AddFundsToSaving()
+    {
+        if (amountToAdd <= 0)
+        {
+            amountError = "Iznos mora biti veći od 0";
+            return;
+        }
+
+        selectedSaving.CurrentAmount += amountToAdd;
+        await TransactionService.UpdateSaving(selectedSaving);
+        await LoadSavings();
+        showAddFundsDialog = false;
+    }
+
+    // Delete Saving
+    private void ConfirmDeleteSaving(Saving saving)
+    {
+        selectedSaving = saving;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDeleteSaving()
+    {
+        showDeleteConfirmation = false;
+    }
+
+    private async Task DeleteSaving()
+    {
+        await TransactionService.DeleteSaving(selectedSaving.Id);
+        await LoadSavings();
+        showDeleteConfirmation = false;
+    }
+
+    // Validation
+    private bool ValidateSaving(Saving saving)
+    {
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(saving.Name))
+        {
+            savingNameError = "Unesite naziv štednje";
+            isValid = false;
+        }
+        else if (saving.Name.Length > 50)
+        {
+            savingNameError = "Naziv štednje ne može biti duži od 50 karaktera";
+            isValid = false;
+        }
+        else
+        {
+            savingNameError = string.Empty;
+        }
+
+        if (saving.TargetAmount <= 0)
+        {
+            targetAmountError = "Ciljani iznos mora biti veći od 0";
+            isValid = false;
+        }
+        else
+        {
+            targetAmountError = string.Empty;
+        }
+
+        return isValid;
+    }
+
+    private void ClearValidationErrors()
+    {
+        savingNameError = string.Empty;
+        targetAmountError = string.Empty;
+        amountError = string.Empty;
+    }
+}
