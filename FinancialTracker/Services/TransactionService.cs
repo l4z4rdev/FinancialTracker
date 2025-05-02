@@ -16,6 +16,7 @@ namespace FinancialTracker.Services
             _database = new SQLiteAsyncConnection(dbPath);
             await _database.CreateTableAsync<Transaction>();
             await _database.CreateTableAsync<Category>();
+            await _database.CreateTableAsync<Saving>();
         }
 
         public async Task<List<Transaction>> GetTransactions()
@@ -51,6 +52,7 @@ namespace FinancialTracker.Services
             }
         }
 
+
         public async Task<List<Category>> GetCategories()
         {
             await Init();
@@ -73,6 +75,51 @@ namespace FinancialTracker.Services
         {
             await Init();
             await _database.DeleteAsync<Category>(id);
+        }
+
+        public async Task DeleteAllCategories()
+        {
+            await Init();
+            var categories = await GetCategories();
+            foreach (var category in categories)
+            {
+                await _database.DeleteAsync(category);
+            }
+        }
+
+
+        public async Task<List<Saving>> GetSavings()
+        {
+            await Init();
+            return await _database.Table<Saving>().OrderByDescending(s => s.Id).ToListAsync();
+        }
+
+        public async Task AddSaving(Saving saving)
+        {
+            await Init();
+            await _database.InsertAsync(saving);
+        }
+
+        public async Task UpdateSaving(Saving saving)
+        {
+            await Init();
+            await _database.UpdateAsync(saving);
+        }
+
+        public async Task DeleteSaving(int id)
+        {
+            await Init();
+            await _database.DeleteAsync<Saving>(id);
+        }
+
+        public async Task DeleteAllSavings()
+        {
+            await Init();
+            var savings = await GetSavings();
+            foreach (var saving in savings)
+            {
+                await _database.DeleteAsync(saving);
+            }
         }
     }
 }

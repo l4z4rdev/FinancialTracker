@@ -27,7 +27,7 @@ namespace FinancialTracker.Models
         [Required(ErrorMessage = "Odaberite kategoriju")]
         public string Category { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Odaberite datum transakcije")]
         public DateTime Date { get; set; }
 
         [System.ComponentModel.DataAnnotations.MaxLength(500, ErrorMessage = "Napomena ne može biti duža od 500 karaktera")]
