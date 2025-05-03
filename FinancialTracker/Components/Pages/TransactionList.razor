@@ -4,39 +4,36 @@
 @inject TransactionService TransactionService
 
 <div class="stats-container">
-    <div class="stat-card income-card">
-        <div class="stat-label">Ukupni Prihodi</div>
-        <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
-    </div>
+    <div class="stats-row">
+        <div class="stat-card income-card">
+            <div class="stat-label">Ukupni Prihodi</div>
+            <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
+        </div>
 
-    <div class="stat-card expense-card">
-        <div class="stat-label">Ukupni Rashodi</div>
-        <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
+        <div class="stat-card expense-card">
+            <div class="stat-label">Ukupni Rashodi</div>
+            <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
+        </div>
     </div>
-
     <div class="stat-card balance-card">
         <div class="stat-label">Balans</div>
         <div class="stat-value balance-value">@Balance.ToString("0.00") RSD</div>
     </div>
 </div>
 
-<div class="action-buttons">
+<h2>Sve Transakcije</h2>
+
+<div class="buttons-row">
     <NavLink href="/add">
         <button class="btn btn-primary">
             ➕ Dodaj Transakciju
         </button>
     </NavLink>
 
-    <button class="btn btn-danger" @onclick="async () => await DeleteAllTransactions()">
-        🗑️ Izbriši sve
-    </button>
-
     <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
         🔄 Osveži
     </button>
 </div>
-
-<h2>Sve Transakcije</h2>
 
 @if (transactions == null)
 {
@@ -60,7 +57,14 @@ else
                 </div>
 
                 <div class="transaction-details">
-                    <div>Kategorija: @t.Category</div>
+                    @{
+                        var categoryColor = categories.FirstOrDefault(c => c.Name == t.Category)?.ColorHex ?? "#000000";
+                    }
+
+                    <div>
+                        Kategorija: <span style="color:@categoryColor">@t.Category</span>
+                    </div>
+
                     @if (!string.IsNullOrWhiteSpace(t.Note))
                     {
                         <div>Napomena: @t.Note</div>
@@ -69,7 +73,7 @@ else
 
                 <div class="transaction-footer">
                     <div class="transaction-date">@t.Date.ToShortDateString()</div>
-                    <button class="btn btn-danger btn-sm" @onclick="async () => await DeleteTransaction(t.Id)">
+                    <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
                         🗑️ Obriši
                     </button>
                 </div>
@@ -78,8 +82,29 @@ else
     </ul>
 }
 
+@if (showDeleteTransactionConfirmation)
+{
+    <div class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Potvrda brisanja transakcije</h3>
+            </div>
+            <div class="modal-body">
+                <p>Da li ste sigurni da želite da obrišete transakciju: <strong>@selectedTransaction?.Name</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CancelDeleteTransaction">Otkaži</button>
+                <button class="btn btn-danger" @onclick="DeleteTransaction">Obriši</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Transaction> transactions;
+    private List<Category> categories = new();
+    private bool showDeleteTransactionConfirmation = false;
+    private Transaction selectedTransaction;
 
     private decimal TotalIncome => transactions?.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount) ?? 0;
     private decimal TotalExpense => transactions?.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount) ?? 0;
@@ -88,12 +113,28 @@ else
     protected override async Task OnInitializedAsync()
     {
         transactions = await TransactionService.GetTransactions();
+        categories = await TransactionService.GetCategories();
     }
 
-    private async Task DeleteTransaction(int id)
+    private async Task ConfirmDeleteTransaction(Transaction transaction)
     {
-        await TransactionService.DeleteTransaction(id);
-        transactions = await TransactionService.GetTransactions();
+        selectedTransaction = transaction;
+        showDeleteTransactionConfirmation = true;
+    }
+
+    private void CancelDeleteTransaction()
+    {
+        showDeleteTransactionConfirmation = false;
+    }
+
+    private async Task DeleteTransaction()
+    {
+        if (selectedTransaction != null)
+        {
+            await TransactionService.DeleteTransaction(selectedTransaction.Id);
+            transactions = await TransactionService.GetTransactions();
+            showDeleteTransactionConfirmation = false;
+        }
     }
 
     private async Task DeleteAllTransactions()

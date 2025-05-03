@@ -20,6 +20,7 @@
     outline: none;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* Internet Explorer 10+ */
+    list-style-type: none;
 }
 
     *::-webkit-scrollbar {
@@ -236,6 +237,12 @@ button {
     margin-bottom: 1rem;
 }
 
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 1rem; /* Optional: Add spacing between the cards */
+}
+
 .stat-card {
     padding: 1rem;
     border-radius: var(--border-radius);
@@ -288,7 +295,6 @@ button {
 
 /* Transaction list */
 .transaction-list {
-    list-style-type: none;
     padding: 0;
     margin: 0;
 }
@@ -364,8 +370,15 @@ button {
     margin-bottom: 1rem;
 }
 
+.buttons-row {
+    display: flex;
+    gap: 1rem; /* Adds spacing between the buttons */
+    align-items: center; /* Ensures buttons are vertically aligned */
+    margin-bottom: 1.5rem; /* Adds space below the buttons */
+}
+
 /* Categories */
-.category-list {
+    .category-list {
     list-style-type: none;
     padding: 0;
 }
@@ -379,6 +392,16 @@ button {
     border-radius: var(--border-radius);
     margin-bottom: 0.5rem;
 }
+
+.color-picker {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
 
 /* Savings */
 /* Savings page styles */
@@ -516,6 +539,28 @@ button {
         font-size: 0.9rem;
         color: rgba(255, 255, 255, 0.8);
     }
+
+.delete-buttons-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem; /* Razmak između dugmadi */
+}
+
+.btn-small {
+    font-size: 0.75rem; /* Manji font */
+    padding: 8px 15px; /* Manji padding */
+    width: 100%; /* Dugmadi zauzima celu širinu svog parent-a */
+    max-width: 400px; /* Maksimalna širina dugmadi */
+}
+
+.delete-data h3 {
+    text-align: center; /* Centriranje naslova */
+    font-size: 1.2rem; /* Manji font za naslov */
+    margin-bottom: 1rem;
+}
 
 /* Validation */
 .validation-message {
