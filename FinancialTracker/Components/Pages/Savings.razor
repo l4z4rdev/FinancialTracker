@@ -4,9 +4,8 @@
 @inject TransactionService TransactionService
 @inject IJSRuntime JSRuntime
 
-<div class="page">
     <h2>Štednja</h2>
-    <main>
+<main>
         <div class="action-buttons">
             <button class="btn btn-primary" @onclick="() => OpenAddSavingDialog()">Nova štednja</button>
         </div>
@@ -204,8 +203,7 @@
                 </div>
             </div>
         }
-    </main>
-</div>
+</main>
 
 @code {
     private List<Saving> savings;

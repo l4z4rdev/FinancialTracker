@@ -9,6 +9,7 @@
 <EditForm Model="newCategory" OnValidSubmit="AddCategory">
     <div class="space-x-2 mb-4">
         <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
+        <input type="color" @bind="newCategory.ColorHex" />
         <button class="btn btn-primary">➕ Dodaj</button>
     </div>
 </EditForm>
@@ -30,18 +31,39 @@ else
         {
             <li class="category-item">
                 <InputText @bind-Value="cat.Name" class="input flex-1 mr-2 mb-0" />
+                <input type="color" @bind="cat.ColorHex" />
                 <div class="space-x-2">
                     <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">💾</button>
-                    <button @onclick="() => DeleteCategory(cat.Id)" class="btn btn-danger btn-sm">🗑️</button>
+                    <button @onclick="() => ConfirmDeleteCategory(cat)" class="btn btn-danger btn-sm">🗑️</button>
                 </div>
             </li>
         }
     </ul>
 }
 
+@if (showDeleteCategoryConfirmation)
+{
+    <div class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Potvrda brisanja kategorije</h3>
+            </div>
+            <div class="modal-body">
+                <p>Da li ste sigurni da želite da obrišete kategoriju: <strong>@selectedCategory?.Name</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CancelDeleteCategory">Otkaži</button>
+                <button class="btn btn-danger" @onclick="DeleteCategory">Obriši</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private Category newCategory = new();
     private List<Category> categories = new();
+    private bool showDeleteCategoryConfirmation = false;
+    private Category selectedCategory;
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,10 +80,11 @@ else
         }
     }
 
-    private async Task DeleteCategory(int id)
+    private async Task DeleteCategory()
     {
-        await TransactionService.DeleteCategory(id);
+        await TransactionService.DeleteCategory(selectedCategory.Id);
         categories = await TransactionService.GetCategories();
+        showDeleteCategoryConfirmation = false;
     }
 
     private async Task UpdateCategory(Category category)
@@ -70,5 +93,16 @@ else
         {
             await TransactionService.UpdateCategory(category);
         }
+    }
+
+    private void ConfirmDeleteCategory(Category category)
+    {
+        selectedCategory = category;
+        showDeleteCategoryConfirmation = true;
+    }
+
+    private void CancelDeleteCategory()
+    {
+        showDeleteCategoryConfirmation = false;
     }
 }
