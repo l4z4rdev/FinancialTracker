@@ -1,8 +1,7 @@
 ﻿@page "/"
-@using FinancialTracker.Services
-@using FinancialTracker.Models
 @inject TransactionService TransactionService
 
+<div class="transaction-page">
 <div class="stats-container">
     <div class="stats-row">
         <div class="stat-card income-card">
@@ -24,11 +23,10 @@
 <h2>Sve Transakcije</h2>
 
 <div class="buttons-row">
-    <NavLink href="/add">
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" @onclick="OpenAddTransactionDialog">
             <img src="Images/add.svg" alt="Add" class="icon" />
         </button>
-    </NavLink>
+
 
     <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
         <img src="Images/refresh.svg" alt="Refresh" class="icon" />
@@ -36,13 +34,13 @@
 </div>
 
 @if (transactions == null)
-{
-    <p>Učitavanje...</p>
-}
+    {
+            <p>Učitavanje...</p>
+    }
 else if (!transactions.Any())
-{
-    <p>Nema unetih transakcija.</p>
-}
+    {
+            <p>Nema unetih transakcija.</p>
+    }
 else
 {
     <ul class="transaction-list">
@@ -73,14 +71,138 @@ else
 
                 <div class="transaction-footer">
                     <div class="transaction-date">@t.Date.ToShortDateString()</div>
-                    <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
-                        🗑️ Obriši
-                    </button>
+                        <button class="btn btn-primary btn-sm" @onclick="() => OpenEditTransactionDialog(t)">
+                            ✏️ Izmeni
+                        </button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
+                            🗑️ Obriši
+                        </button>
                 </div>
             </li>
         }
     </ul>
 }
+
+    @if (showAddTransactionDialog)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Nova transakcija</h3>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="newTransaction" OnValidSubmit="SaveNewTransaction">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label>Naziv</label>
+                            <InputText class="input" @bind-Value="newTransaction.Name" />
+                            <ValidationMessage For="@(() => newTransaction.Name)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Iznos</label>
+                            <InputNumber class="input" @bind-Value="newTransaction.Amount" />
+                            <ValidationMessage For="@(() => newTransaction.Amount)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Kategorija</label>
+                            <InputSelect class="input" @bind-Value="newTransaction.Category">
+                                <option value="">-- Odaberite kategoriju --</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.Name">@category.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => newTransaction.Category)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Datum</label>
+                            <InputDate class="input" @bind-Value="newTransaction.Date" />
+                            <ValidationMessage For="@(() => newTransaction.Date)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Napomena (opciono)</label>
+                            <InputTextArea class="input" @bind-Value="newTransaction.Note" />
+                            <ValidationMessage For="@(() => newTransaction.Note)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Tip</label>
+                            <InputSelect class="input" @bind-Value="newTransaction.Type">
+                                <option value="">-- Odaberite tip --</option>
+                                <option value="@TransactionType.Income">Prihod</option>
+                                <option value="@TransactionType.Expense">Rashod</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => newTransaction.Type)" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseAddTransactionDialog">Otkaži</button>
+                            <button type="submit" class="btn btn-primary">Sačuvaj</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showEditTransactionDialog)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Izmena transakcije</h3>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="editTransaction" OnValidSubmit="UpdateTransaction">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label>Naziv</label>
+                            <InputText class="input" @bind-Value="editTransaction.Name" />
+                            <ValidationMessage For="@(() => editTransaction.Name)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Iznos</label>
+                            <InputNumber class="input" @bind-Value="editTransaction.Amount" />
+                            <ValidationMessage For="@(() => editTransaction.Amount)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Kategorija</label>
+                            <InputSelect class="input" @bind-Value="editTransaction.Category">
+                                <option value="">-- Odaberite kategoriju --</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.Name">@category.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => editTransaction.Category)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Datum</label>
+                            <InputDate class="input" @bind-Value="editTransaction.Date" />
+                            <ValidationMessage For="@(() => editTransaction.Date)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Napomena (opciono)</label>
+                            <InputTextArea class="input" @bind-Value="editTransaction.Note" />
+                            <ValidationMessage For="@(() => editTransaction.Note)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Tip</label>
+                            <InputSelect class="input" @bind-Value="editTransaction.Type">
+                                <option value="">-- Odaberite tip --</option>
+                                <option value="@TransactionType.Income">Prihod</option>
+                                <option value="@TransactionType.Expense">Rashod</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => editTransaction.Type)" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="CloseEditTransactionDialog">Otkaži</button>
+                            <button type="submit" class="btn btn-primary">Sačuvaj</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+
 
 @if (showDeleteTransactionConfirmation)
 {
@@ -99,12 +221,23 @@ else
         </div>
     </div>
 }
+</div>
 
 @code {
     private List<Transaction> transactions;
     private List<Category> categories = new();
     private bool showDeleteTransactionConfirmation = false;
     private Transaction selectedTransaction;
+
+    private bool isLoading = true;
+
+    // Dialog control
+    private bool showAddTransactionDialog = false;
+    private bool showEditTransactionDialog = false;
+
+    // Form data
+    private Transaction newTransaction = new Transaction() { Date = DateTime.Now };
+    private Transaction editTransaction = new Transaction();
 
     private decimal TotalIncome => transactions?.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount) ?? 0;
     private decimal TotalExpense => transactions?.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount) ?? 0;
@@ -146,5 +279,58 @@ else
     private async Task RefreshTransactions()
     {
         transactions = await TransactionService.GetTransactions();
+    }
+
+    private void OpenAddTransactionDialog()
+    {
+        newTransaction = new Transaction() { Date = DateTime.Now };
+        showAddTransactionDialog = true;
+    }
+
+    private void CloseAddTransactionDialog()
+    {
+        showAddTransactionDialog = false;
+    }
+
+    private async Task SaveNewTransaction()
+    {
+        await TransactionService.AddTransaction(newTransaction);
+        await LoadTransactions();
+        showAddTransactionDialog = false;
+    }
+
+    // Edit Transaction Dialog
+    private void OpenEditTransactionDialog(Transaction transaction)
+    {
+        editTransaction = new Transaction
+            {
+                Id = transaction.Id,
+                Name = transaction.Name,
+                Amount = transaction.Amount,
+                Category = transaction.Category,
+                Date = transaction.Date,
+                Note = transaction.Note,
+                Type = transaction.Type
+            };
+        showEditTransactionDialog = true;
+    }
+
+    private void CloseEditTransactionDialog()
+    {
+        showEditTransactionDialog = false;
+    }
+
+    private async Task UpdateTransaction()
+    {
+        await TransactionService.UpdateTransaction(editTransaction);
+        await LoadTransactions();
+        showEditTransactionDialog = false;
+    }
+
+    private async Task LoadTransactions()
+    {
+        isLoading = true;
+        transactions = await TransactionService.GetTransactions();
+        isLoading = false;
     }
 }
