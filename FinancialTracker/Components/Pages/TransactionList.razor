@@ -2,86 +2,86 @@
 @inject TransactionService TransactionService
 
 <div class="transaction-page">
-<div class="stats-container">
-    <div class="stats-row">
-        <div class="stat-card income-card">
-            <div class="stat-label">Ukupni Prihodi</div>
-            <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
-        </div>
+    <div class="stats-container">
+        <div class="stats-row">
+            <div class="stat-card income-card">
+                <div class="stat-label">Ukupni Prihodi</div>
+                <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
+            </div>
 
-        <div class="stat-card expense-card">
-            <div class="stat-label">Ukupni Rashodi</div>
-            <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
+            <div class="stat-card expense-card">
+                <div class="stat-label">Ukupni Rashodi</div>
+                <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
+            </div>
+        </div>
+        <div class="stat-card balance-card">
+            <div class="stat-label">Balans</div>
+            <div class="stat-value balance-value">@Balance.ToString("0.00") RSD</div>
         </div>
     </div>
-    <div class="stat-card balance-card">
-        <div class="stat-label">Balans</div>
-        <div class="stat-value balance-value">@Balance.ToString("0.00") RSD</div>
-    </div>
-</div>
 
-<h2>Sve Transakcije</h2>
+    <h2>Sve Transakcije</h2>
 
-<div class="buttons-row">
+    <div class="buttons-row">
         <button class="btn btn-primary" @onclick="OpenAddTransactionDialog">
             <img src="Images/add.svg" alt="Add" class="icon" />
         </button>
 
 
-    <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
-        <img src="Images/refresh.svg" alt="Refresh" class="icon" />
-    </button>
-</div>
+        <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
+            <img src="Images/refresh.svg" alt="Refresh" class="icon" />
+        </button>
+    </div>
 
-@if (transactions == null)
+    @if (transactions == null)
     {
-            <p>Učitavanje...</p>
+        <p>Učitavanje...</p>
     }
-else if (!transactions.Any())
+    else if (!transactions.Any())
     {
-            <p>Nema unetih transakcija.</p>
+        <p>Nema unetih transakcija.</p>
     }
-else
-{
-    <ul class="transaction-list">
-        @foreach (var t in transactions)
-        {
-            <li class="transaction-item @(t.Type == TransactionType.Income ? "income" : "expense")">
-                <div class="transaction-header">
-                    <h3 class="transaction-title">@t.Name</h3>
-                    <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
-                        @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
-                    </div>
-                </div>
-
-                <div class="transaction-details">
-                    @{
-                        var categoryColor = categories.FirstOrDefault(c => c.Name == t.Category)?.ColorHex ?? "#000000";
-                    }
-
-                    <div>
-                        Kategorija: <span style="color:@categoryColor">@t.Category</span>
+    else
+    {
+        <ul class="transaction-list">
+            @foreach (var t in transactions)
+            {
+                <li class="transaction-item @(t.Type == TransactionType.Income ? "income" : "expense")">
+                    <div class="transaction-header">
+                        <h3 class="transaction-title">@t.Name</h3>
+                        <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
+                            @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
+                        </div>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(t.Note))
-                    {
-                        <div>Napomena: @t.Note</div>
-                    }
-                </div>
+                    <div class="transaction-details">
+                        @{
+                            var categoryColor = categories.FirstOrDefault(c => c.Name == t.Category)?.ColorHex ?? "#000000";
+                        }
 
-                <div class="transaction-footer">
-                    <div class="transaction-date">@t.Date.ToShortDateString()</div>
+                        <div>
+                            Kategorija: <span style="color:@categoryColor">@t.Category</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(t.Note))
+                        {
+                            <div>Napomena: @t.Note</div>
+                        }
+                    </div>
+
+                    <div class="transaction-footer">
+                        <div class="transaction-date">@t.Date.ToShortDateString()</div>
                         <button class="btn btn-primary btn-sm" @onclick="() => OpenEditTransactionDialog(t)">
-                            ✏️ Izmeni
+                            <img src="Images/edit.svg" alt="Edit" class="icon" />
                         </button>
                         <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
-                            🗑️ Obriši
+                            <img src="Images/delete.svg" alt="Delete" class="icon" />
                         </button>
-                </div>
-            </li>
-        }
-    </ul>
-}
+                    </div>
+                </li>
+            }
+        </ul>
+    }
 
     @if (showAddTransactionDialog)
     {
@@ -93,26 +93,39 @@ else
                 <div class="modal-body">
                     <EditForm Model="newTransaction" OnValidSubmit="SaveNewTransaction">
                         <DataAnnotationsValidator />
-                        <div class="form-group">
-                            <label>Naziv</label>
-                            <InputText class="input" @bind-Value="newTransaction.Name" />
-                            <ValidationMessage For="@(() => newTransaction.Name)" />
+                        <div class="form-row front-row">
+                            <div class="form-group">
+                                <label>Naziv</label>
+                                <InputText class="input" @bind-Value="newTransaction.Name" />
+                                <ValidationMessage For="@(() => newTransaction.Name)" />
+                            </div>
+                            <div class="form-group">
+                                <label>Iznos</label>
+                                <InputNumber class="input" @bind-Value="newTransaction.Amount" />
+                                <ValidationMessage For="@(() => newTransaction.Amount)" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Iznos</label>
-                            <InputNumber class="input" @bind-Value="newTransaction.Amount" />
-                            <ValidationMessage For="@(() => newTransaction.Amount)" />
-                        </div>
-                        <div class="form-group">
-                            <label>Kategorija</label>
-                            <InputSelect class="input" @bind-Value="newTransaction.Category">
-                                <option value="">-- Odaberite kategoriju --</option>
-                                @foreach (var category in categories)
-                                {
-                                    <option value="@category.Name">@category.Name</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => newTransaction.Category)" />
+                        <div class="form-row front-row">
+                            <div class="form-group">
+                                <label>Kategorija</label>
+                                <InputSelect class="input" @bind-Value="newTransaction.Category">
+                                    <option value="">-- Odaberite kategoriju --</option>
+                                    @foreach (var category in categories)
+                                    {
+                                        <option value="@category.Name">@category.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => newTransaction.Category)" />
+                            </div>
+                            <div class="form-group">
+                                <label>Tip</label>
+                                <InputSelect class="input" @bind-Value="newTransaction.Type">
+                                    <option value="">-- Odaberite tip --</option>
+                                    <option value="@TransactionType.Income">Prihod</option>
+                                    <option value="@TransactionType.Expense">Rashod</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => newTransaction.Type)" />
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Datum</label>
@@ -121,17 +134,8 @@ else
                         </div>
                         <div class="form-group">
                             <label>Napomena (opciono)</label>
-                            <InputTextArea class="input" @bind-Value="newTransaction.Note" />
+                            <InputText class="input" @bind-Value="newTransaction.Note" />
                             <ValidationMessage For="@(() => newTransaction.Note)" />
-                        </div>
-                        <div class="form-group">
-                            <label>Tip</label>
-                            <InputSelect class="input" @bind-Value="newTransaction.Type">
-                                <option value="">-- Odaberite tip --</option>
-                                <option value="@TransactionType.Income">Prihod</option>
-                                <option value="@TransactionType.Expense">Rashod</option>
-                            </InputSelect>
-                            <ValidationMessage For="@(() => newTransaction.Type)" />
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="CloseAddTransactionDialog">Otkaži</button>
@@ -181,7 +185,7 @@ else
                         </div>
                         <div class="form-group">
                             <label>Napomena (opciono)</label>
-                            <InputTextArea class="input" @bind-Value="editTransaction.Note" />
+                            <InputText class="input" @bind-Value="editTransaction.Note" />
                             <ValidationMessage For="@(() => editTransaction.Note)" />
                         </div>
                         <div class="form-group">
@@ -204,23 +208,23 @@ else
     }
 
 
-@if (showDeleteTransactionConfirmation)
-{
-    <div class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>Potvrda brisanja transakcije</h3>
-            </div>
-            <div class="modal-body">
-                <p>Da li ste sigurni da želite da obrišete transakciju: <strong>@selectedTransaction?.Name</strong>?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @onclick="CancelDeleteTransaction">Otkaži</button>
-                <button class="btn btn-danger" @onclick="DeleteTransaction">Obriši</button>
+    @if (showDeleteTransactionConfirmation)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Potvrda brisanja transakcije</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Da li ste sigurni da želite da obrišete transakciju: <strong>@selectedTransaction?.Name</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CancelDeleteTransaction">Otkaži</button>
+                    <button class="btn btn-danger" @onclick="DeleteTransaction">Obriši</button>
+                </div>
             </div>
         </div>
-    </div>
-}
+    }
 </div>
 
 @code {

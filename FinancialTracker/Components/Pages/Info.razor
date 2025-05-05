@@ -26,10 +26,15 @@
     <div class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>Potvrda brisanja</h3>
+                    <h3>
+                        <img src="Images/warning.svg" alt="Warning" class="icon" />
+                        Potvrda brisanja
+                    </h3>
             </div>
             <div class="modal-body">
-                <p>⚠️ Da li ste sigurni da želite da obrišete <strong>@DeleteTargetText</strong>?</p>
+                <p>
+                    Da li ste sigurni da želite da obrišete <strong>@DeleteTargetText</strong>?
+                </p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" @onclick="() => ShowConfirm = false">Ne</button>

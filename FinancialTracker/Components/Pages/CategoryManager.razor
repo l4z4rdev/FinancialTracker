@@ -3,7 +3,6 @@
 @inject TransactionService TransactionService
 
 <div class="category-page">
-<h2>Kategorije</h2>
 
 <EditForm Model="newCategory" OnValidSubmit="AddCategory">
     <div class="space-x-2 mb-4">
@@ -11,7 +10,9 @@
         <div class="color-picker-container">
             <input id="colorPicker" type="color" @bind="newCategory.ColorHex" class="color-picker" />
         </div>
-        <button class="btn btn-primary">➕ Dodaj</button>
+        <button class="btn btn-primary">
+            <img src="Images/add.svg" alt="Add" class="icon"/>
+        </button>
     </div>
 </EditForm>
 

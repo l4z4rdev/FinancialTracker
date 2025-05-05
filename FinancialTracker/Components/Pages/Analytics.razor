@@ -1,1 +1,118 @@
 @page "/analytics"
+@inject FinancialTracker.Services.TransactionService transactionService
+@inject FinancialTracker.Services.TransactionService categoryService
+
+<!-- Filters -->
+<div class="filter-section">
+    <label>Od:</label>
+    <InputDate @bind-Value="FromDate" class="input" />
+
+    <label>Do:</label>
+    <InputDate @bind-Value="ToDate" class="input" />
+
+    <label>Kategorija:</label>
+    <select @bind="SelectedCategory" class="input">
+        <option value="">Sve</option>
+        @foreach (var category in Categories)
+        {
+            <option value="@category.Name">@category.Name</option>
+        }
+    </select>
+
+    <label>Tip:</label>
+    <select @bind="SelectedType" class="input">
+        <option value="">Svi</option>
+        <option value="Income">Prihod</option>
+        <option value="Expense">Rashod</option>
+    </select>
+
+    <button class="btn btn-primary" @onclick="ApplyFilters">Primeni</button>
+</div>
+
+<!-- Summary -->
+<div class="analytics-summary">
+    <p><strong>Ukupni Prihodi:</strong> @TotalIncome.ToString("0.00") RSD</p>
+    <p><strong>Ukupni Rashodi:</strong> @TotalExpense.ToString("0.00") RSD</p>
+    <p><strong>Saldo:</strong> @(TotalIncome - TotalExpense).ToString("0.00") RSD</p>
+</div>
+
+<!-- Breakdown by Category -->
+@if (GroupedByCategory.Any())
+{
+    <h4>Raspodela po kategorijama</h4>
+    <ul>
+        @foreach (var item in GroupedByCategory)
+        {
+            <li>@item.Key: @item.Value.ToString("0.00") RSD</li>
+        }
+    </ul>
+}
+
+<!-- Filtered Transactions -->
+@if (FilteredTransactions.Any())
+{
+    <h4>Transakcije</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Naziv</th>
+                <th>Kategorija</th>
+                <th>Tip</th>
+                <th>Iznos</th>
+                <th>Napomena</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in FilteredTransactions)
+            {
+                <tr>
+                    <td>@t.Date.ToShortDateString()</td>
+                    <td>@t.Name</td>
+                    <td>@t.Category</td>
+                    <td>@t.Type</td>
+                    <td>@t.Amount.ToString("0.00")</td>
+                    <td>@t.Note</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private DateTime FromDate = DateTime.Today.AddMonths(-1);
+    private DateTime ToDate = DateTime.Today;
+    private string SelectedCategory = "";
+    private string SelectedType = "";
+
+    private List<Category> Categories = new();
+    private List<Transaction> FilteredTransactions = new();
+    private Dictionary<string, decimal> GroupedByCategory = new();
+
+    private decimal TotalIncome = 0;
+    private decimal TotalExpense = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await categoryService.GetCategories();
+        await ApplyFilters();
+    }
+
+    private async Task ApplyFilters()
+    {
+        var transactions = await transactionService.GetTransactions();
+
+        FilteredTransactions = transactions
+            .Where(t => t.Date >= FromDate && t.Date <= ToDate)
+            .Where(t => string.IsNullOrEmpty(SelectedCategory) || t.Category == SelectedCategory)
+            .Where(t => string.IsNullOrEmpty(SelectedType) || t.Type.ToString() == SelectedType)
+            .ToList();
+
+        TotalIncome = FilteredTransactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
+        TotalExpense = FilteredTransactions.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
+
+        GroupedByCategory = FilteredTransactions
+            .GroupBy(t => t.Category)
+            .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
+    }
+}
