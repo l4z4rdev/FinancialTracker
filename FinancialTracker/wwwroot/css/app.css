@@ -137,8 +137,9 @@ h2 {
 }
 
     .nav-item .icon {
-        font-size: 1.2rem;
         margin-bottom: 0.25rem;
+        height: 2rem; /* Ensures the icon has a fixed height */
+        width: 2rem; /* Ensures the icon has a fixed width */
     }
 
     .nav-item.active {
@@ -378,7 +379,7 @@ button {
 }
 
 /* Categories */
-    .category-list {
+.category-list {
     list-style-type: none;
     padding: 0;
 }
@@ -392,6 +393,10 @@ button {
     border-radius: var(--border-radius);
     margin-bottom: 0.5rem;
 }
+    .category-item .icon {
+        height: 1.7rem; /* Ensures the icon has a fixed height */
+        width: 1.7rem; /* Ensures the icon has a fixed width */
+    }
 
 .color-picker {
     width: 40px;
@@ -401,7 +406,6 @@ button {
     cursor: pointer;
     margin-right: 0.5rem;
 }
-
 
 /* Savings */
 /* Savings page styles */

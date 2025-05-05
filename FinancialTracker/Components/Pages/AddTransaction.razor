@@ -21,14 +21,6 @@
         </div>
 
         <div>
-            <InputSelect @bind-Value="newTransaction.Type" class="input">
-                <option value="Income">Prihod</option>
-                <option value="Expense">Rashod</option>
-            </InputSelect>
-            <ValidationMessage For="@(() => newTransaction.Type)" />
-        </div>
-
-        <div>
             <InputSelect @bind-Value="selectedCategoryName" class="input">
                 <option value="">-- Odaberi kategoriju --</option>
                 @foreach (var cat in categories)
@@ -37,6 +29,14 @@
                 }
             </InputSelect>
             <ValidationMessage For="@(() => newTransaction.Category)" />
+        </div>
+
+        <div>
+            <InputSelect @bind-Value="newTransaction.Type" class="input">
+                <option value="Income">Prihod</option>
+                <option value="Expense">Rashod</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => newTransaction.Type)" />
         </div>
 
         <div>

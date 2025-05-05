@@ -9,7 +9,9 @@
 <EditForm Model="newCategory" OnValidSubmit="AddCategory">
     <div class="space-x-2 mb-4">
         <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
-        <input type="color" @bind="newCategory.ColorHex" />
+        <div class="color-picker-container">
+            <input id="colorPicker" type="color" @bind="newCategory.ColorHex" class="color-picker" />
+        </div>
         <button class="btn btn-primary">➕ Dodaj</button>
     </div>
 </EditForm>
@@ -31,10 +33,16 @@ else
         {
             <li class="category-item">
                 <InputText @bind-Value="cat.Name" class="input flex-1 mr-2 mb-0" />
-                <input type="color" @bind="cat.ColorHex" />
+                <div class="color-picker-container">
+                    <input type="color" @bind="cat.ColorHex" class="color-picker" />
+                </div>
                 <div class="space-x-2">
-                    <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">💾</button>
-                    <button @onclick="() => ConfirmDeleteCategory(cat)" class="btn btn-danger btn-sm">🗑️</button>
+                    <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">
+                        <img src="Images/save.svg" alt="Pregled" class="icon" />
+                    </button>
+                    <button @onclick="() => ConfirmDeleteCategory(cat)" class="btn btn-danger btn-sm">
+                        <img src="Images/delete.svg" alt="Pregled" class="icon" />
+                    </button>
                 </div>
             </li>
         }
