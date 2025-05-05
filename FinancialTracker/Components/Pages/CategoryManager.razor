@@ -1,9 +1,8 @@
 ﻿@page "/categories"
-@using FinancialTracker.Models
-@using FinancialTracker.Services
 @inject NavigationManager Navigation
 @inject TransactionService TransactionService
 
+<div class="category-page">
 <h2>Kategorije</h2>
 
 <EditForm Model="newCategory" OnValidSubmit="AddCategory">
@@ -66,6 +65,7 @@ else
         </div>
     </div>
 }
+</div>
 
 @code {
     private Category newCategory = new();

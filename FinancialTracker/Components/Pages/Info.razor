@@ -1,8 +1,7 @@
 ﻿@page "/info"
-@using FinancialTracker.Services
-@using FinancialTracker.Models
 @inject TransactionService TransactionService
 
+<div class="info-page">
 <h2>📘 O aplikaciji</h2>
 <p>Finansijski Tracker vam omogućava da pratite prihode, rashode i štednju.</p>
 
@@ -39,6 +38,7 @@
         </div>
     </div>
 }
+</div>
 
 @code {
     private bool ShowConfirm = false;

@@ -1,10 +1,8 @@
 ﻿@page "/savings"
-@using FinancialTracker.Models
-@using FinancialTracker.Services
 @inject TransactionService TransactionService
-@inject IJSRuntime JSRuntime
 
-    <h2>Štednja</h2>
+<div class="savings-page">
+<h2>Štednja</h2>
 <main>
         <div class="action-buttons">
             <button class="btn btn-primary" @onclick="() => OpenAddSavingDialog()">Nova štednja</button>
@@ -204,6 +202,7 @@
             </div>
         }
 </main>
+</div>
 
 @code {
     private List<Saving> savings;
