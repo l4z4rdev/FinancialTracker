@@ -1,0 +1,28 @@
+.category-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--dark-surface);
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+}
+
+    .category-item .icon {
+        height: 1.7rem; /* Ensures the icon has a fixed height */
+        width: 1.7rem; /* Ensures the icon has a fixed width */
+    }
+
+.color-picker {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
