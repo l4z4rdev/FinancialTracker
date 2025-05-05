@@ -1,8 +1,9 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <div class="page">
     <div class="app-header">
-        Praćenje finansija
+        @GetPageTitle()
     </div>
 
     <main>
@@ -29,3 +30,21 @@
         </NavLink>
     </div>
 </div>
+
+@code {
+    private string GetPageTitle()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var path = uri.AbsolutePath;
+
+        return path switch
+        {
+            "/" => "Transakcije",
+            "/analytics" => "Analitika",
+            "/categories" => "Kategorije",
+            "/savings" => "Štednja",
+            "/info" => "Informacije",
+            _ => "Praćenje finansija"
+        };
+    }
+}

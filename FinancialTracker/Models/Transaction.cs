@@ -14,6 +14,7 @@ namespace FinancialTracker.Models
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
+        [Required(ErrorMessage = "Unesite naziv")]
         [System.ComponentModel.DataAnnotations.MaxLength(100, ErrorMessage = "Naziv ne može biti duži od 100 karaktera")]
         public string Name { get; set; }
 
