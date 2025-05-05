@@ -108,7 +108,7 @@
                         </div>
                         <div class="form-group">
                             <label for="targetAmount">Ciljani iznos</label>
-                            <input id="targetAmount" class="input" type="number" step="0.01" @bind="newSaving.TargetAmount" />
+                            <input id="targetAmount" class="input" type="number" @bind="newSaving.TargetAmount" />
                             @if (!string.IsNullOrEmpty(targetAmountError))
                             {
                                 <div class="validation-message">@targetAmountError</div>
@@ -116,7 +116,7 @@
                         </div>
                         <div class="form-group">
                             <label for="initialAmount">Početni iznos (opciono)</label>
-                            <input id="initialAmount" class="input" type="number" step="0.01" @bind="newSaving.CurrentAmount" />
+                            <input id="initialAmount" class="input" type="number" @bind="newSaving.CurrentAmount" />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -145,7 +145,7 @@
                         </div>
                         <div class="form-group">
                             <label for="editTargetAmount">Ciljani iznos</label>
-                            <input id="editTargetAmount" class="input" type="number" step="0.01" @bind="editSaving.TargetAmount" />
+                            <input id="editTargetAmount" class="input" type="number" @bind="editSaving.TargetAmount" />
                             @if (!string.IsNullOrEmpty(targetAmountError))
                             {
                                 <div class="validation-message">@targetAmountError</div>
@@ -171,7 +171,7 @@
                         <p>Dodaj iznos u štednju: <strong>@selectedSaving?.Name</strong></p>
                         <div class="form-group">
                             <label for="amountToAdd">Iznos</label>
-                            <input id="amountToAdd" class="input" type="number" step="0.01" @bind="amountToAdd" />
+                            <input id="amountToAdd" class="input" type="number" @bind="amountToAdd" />
                             @if (!string.IsNullOrEmpty(amountError))
                             {
                                 <div class="validation-message">@amountError</div>
