@@ -13,9 +13,6 @@ namespace FinancialTracker
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("Nunito-Regular.ttf", "NunitoRegular");
-                    fonts.AddFont("Montserrat-Regular.ttf", "MontserratRegular");
-                    fonts.AddFont("Lexend-Regular.ttf", "LexendRegular");
                 });
 
             builder.Services.AddMauiBlazorWebView();

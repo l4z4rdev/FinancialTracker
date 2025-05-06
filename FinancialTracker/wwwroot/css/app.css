@@ -31,7 +31,7 @@
     }
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', sans-serif;
     background-color: var(--dark-bg);
     color: var(--text-light);
     margin: 0;
@@ -478,6 +478,7 @@ button {
     }
 
 .category-selector {
+    width: 80%;
     background-color: var(--dark-bg);
     border-radius: var(--border-radius);
     padding: 0.75rem;
