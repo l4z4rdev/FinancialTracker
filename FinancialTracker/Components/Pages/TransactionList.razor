@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using FinancialTracker.Services
 @inject TransactionService TransactionService
 
 <div class="transaction-page">
@@ -26,7 +27,6 @@
         <button class="btn btn-primary" @onclick="OpenAddTransactionDialog">
             <img src="Images/add.svg" alt="Add" class="icon" />
         </button>
-
 
         <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
             <img src="Images/refresh.svg" alt="Refresh" class="icon" />
@@ -71,12 +71,14 @@
 
                     <div class="transaction-footer">
                         <div class="transaction-date">@t.Date.ToShortDateString()</div>
-                        <button class="btn btn-primary btn-sm" @onclick="() => OpenEditTransactionDialog(t)">
-                            <img src="Images/edit.svg" alt="Edit" class="icon" />
-                        </button>
-                        <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
-                            <img src="Images/delete.svg" alt="Delete" class="icon" />
-                        </button>
+                        <div class="transaction-actions">
+                            <button class="btn btn-primary btn-sm" @onclick="() => OpenEditTransactionDialog(t)">
+                                <img src="Images/edit.svg" alt="Edit" class="icon" />
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDeleteTransaction(t)">
+                                <img src="Images/delete.svg" alt="Delete" class="icon" />
+                            </button>
+                        </div>
                     </div>
                 </li>
             }
@@ -157,46 +159,55 @@
                 <div class="modal-body">
                     <EditForm Model="editTransaction" OnValidSubmit="UpdateTransaction">
                         <DataAnnotationsValidator />
-                        <div class="form-group">
-                            <label>Naziv</label>
-                            <InputText class="input" @bind-Value="editTransaction.Name" />
-                            <ValidationMessage For="@(() => editTransaction.Name)" />
+
+                        <div class="form-row front-row">
+                            <div class="form-group">
+                                <label>Naziv</label>
+                                <InputText class="input" @bind-Value="editTransaction.Name" />
+                                <ValidationMessage For="@(() => editTransaction.Name)" />
+                            </div>
+                            <div class="form-group">
+                                <label>Iznos</label>
+                                <InputNumber class="input" @bind-Value="editTransaction.Amount" />
+                                <ValidationMessage For="@(() => editTransaction.Amount)" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Iznos</label>
-                            <InputNumber class="input" @bind-Value="editTransaction.Amount" />
-                            <ValidationMessage For="@(() => editTransaction.Amount)" />
+
+                        <div class="form-row front-row">
+                            <div class="form-group">
+                                <label>Kategorija</label>
+                                <InputSelect class="input" @bind-Value="editTransaction.Category">
+                                    <option value="">-- Odaberite kategoriju --</option>
+                                    @foreach (var category in categories)
+                                    {
+                                        <option value="@category.Name">@category.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => editTransaction.Category)" />
+                            </div>
+                            <div class="form-group">
+                                <label>Tip</label>
+                                <InputSelect class="input" @bind-Value="editTransaction.Type">
+                                    <option value="">-- Odaberite tip --</option>
+                                    <option value="@TransactionType.Income">Prihod</option>
+                                    <option value="@TransactionType.Expense">Rashod</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => editTransaction.Type)" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Kategorija</label>
-                            <InputSelect class="input" @bind-Value="editTransaction.Category">
-                                <option value="">-- Odaberite kategoriju --</option>
-                                @foreach (var category in categories)
-                                {
-                                    <option value="@category.Name">@category.Name</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => editTransaction.Category)" />
-                        </div>
+
                         <div class="form-group">
                             <label>Datum</label>
                             <InputDate class="input" @bind-Value="editTransaction.Date" />
                             <ValidationMessage For="@(() => editTransaction.Date)" />
                         </div>
+
                         <div class="form-group">
                             <label>Napomena (opciono)</label>
                             <InputText class="input" @bind-Value="editTransaction.Note" />
                             <ValidationMessage For="@(() => editTransaction.Note)" />
                         </div>
-                        <div class="form-group">
-                            <label>Tip</label>
-                            <InputSelect class="input" @bind-Value="editTransaction.Type">
-                                <option value="">-- Odaberite tip --</option>
-                                <option value="@TransactionType.Income">Prihod</option>
-                                <option value="@TransactionType.Expense">Rashod</option>
-                            </InputSelect>
-                            <ValidationMessage For="@(() => editTransaction.Type)" />
-                        </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="CloseEditTransactionDialog">Otkaži</button>
                             <button type="submit" class="btn btn-primary">Sačuvaj</button>
@@ -206,6 +217,7 @@
             </div>
         </div>
     }
+
 
 
     @if (showDeleteTransactionConfirmation)

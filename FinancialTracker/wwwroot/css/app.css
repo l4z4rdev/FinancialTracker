@@ -208,6 +208,7 @@ button {
     transition: background-color 0.2s ease;
     border: none;
 }
+
     button:focus-visible {
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
@@ -277,6 +278,7 @@ button {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
     .stat-card:hover {
         transform: scale(1.02);
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -390,6 +392,12 @@ button {
     color: rgba(255, 255, 255, 0.5);
 }
 
+.transaction-actions {
+    display: flex;
+    gap: 0.5rem; /* razmak između dugmića */
+}
+
+
 .front-row {
     display: flex;
     gap: 20px; /* Prilagodi razmak između polja po potrebi */
@@ -413,102 +421,109 @@ button {
     align-items: center;
 }
 
-/*Analytics*/
-/* Filter Section */
-.filter-section {
+/* Analytics */
+.analytics-page {
+    padding-bottom: 70px;
+}
+
+.filter-container {
+    background-color: var(--dark-surface);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+    .filter-container h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+    .filter-item label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+    .filter-actions .btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+.category-selector {
+    background-color: var(--dark-bg);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    max-height: 150px;
+    overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-    .filter-section label {
-        font-weight: 600;
-        margin-right: 0.5rem;
-    }
-
-    .filter-section .input {
-        padding: 0.5rem;
-        font-size: 1rem;
-        border-radius: var(--border-radius);
-        border: 1px solid #ccc;
-        width: 200px;
-    }
-
-    .filter-section button {
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        background-color: var(--primary-color);
-        color: #fff;
-        border: none;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-    }
-
-        .filter-section button:hover {
-            background-color: var(--primary-color-dark);
-        }
-
-/* Analytics Summary */
-.analytics-summary {
-    background-color: var(--light-surface);
-    padding: 1rem;
+.category-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-    .analytics-summary p {
-        font-size: 1rem;
-        margin: 0.5rem 0;
-    }
-
-    .analytics-summary strong {
-        font-weight: 600;
-    }
-
-    /* Breakdown by Category */
-    .analytics-summary ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 1rem 0;
-    }
-
-        .analytics-summary ul li {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-/* Transactions Table */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1.5rem;
+.results-container {
+    margin-top: 2rem;
 }
 
-    .table th, .table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
+    .results-container h3 {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: var(--primary-color);
     }
 
-    .table th {
-        background-color: var(--surface-color);
-        font-weight: bold;
-    }
-
-    .table tbody tr:hover {
-        background-color: var(--hover-background);
-    }
-
-/* Responsive Design */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .filter-section {
+    .filter-row {
         flex-direction: column;
-        gap: 1rem;
     }
 
-        .filter-section .input {
+    .filter-item {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+    }
+
+        .filter-actions .btn {
             width: 100%;
         }
 }
