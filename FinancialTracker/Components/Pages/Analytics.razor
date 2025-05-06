@@ -1,118 +1,206 @@
-@page "/analytics"
-@inject FinancialTracker.Services.TransactionService transactionService
-@inject FinancialTracker.Services.TransactionService categoryService
+﻿@page "/analytics"
+@inject TransactionService TransactionService
 
-<!-- Filters -->
-<div class="filter-section">
-    <label>Od:</label>
-    <InputDate @bind-Value="FromDate" class="input" />
+<div class="analytics-page">
+    <div class="filter-container">
+        <div class="filter-group">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>Početni datum</label>
+                    <InputDate class="input" @bind-Value="startDate" />
+                </div>
+                <div class="filter-item">
+                    <label>Krajnji datum</label>
+                    <InputDate class="input" @bind-Value="endDate" />
+                </div>
+            </div>
 
-    <label>Do:</label>
-    <InputDate @bind-Value="ToDate" class="input" />
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>Minimalni iznos</label>
+                    <InputNumber class="input" @bind-Value="minAmount" />
+                </div>
+                <div class="filter-item">
+                    <label>Maksimalni iznos</label>
+                    <InputNumber class="input" @bind-Value="maxAmount" />
+                </div>
+            </div>
 
-    <label>Kategorija:</label>
-    <select @bind="SelectedCategory" class="input">
-        <option value="">Sve</option>
-        @foreach (var category in Categories)
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>Kategorije</label>
+                    <div class="category-selector">
+                        @foreach (var cat in categories)
+                        {
+                            <div class="category-checkbox">
+                                <input type="checkbox" id="cat-@cat.Id"
+                                       @onchange="@(e => ToggleCategory(cat.Name, (bool)e.Value))" />
+                                <label for="cat-@cat.Id" style="color:@cat.ColorHex">@cat.Name</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label>Tip transakcije</label>
+                    <select class="input" @bind="selectedType">
+                        <option value="">Sve transakcije</option>
+                        <option value="@TransactionType.Income">Prihodi</option>
+                        <option value="@TransactionType.Expense">Rashodi</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" @onclick="ApplyFilters">
+                    <img src="Images/search.svg" alt="Search" class="icon" /> Primeni filtere
+                </button>
+                <button class="btn btn-secondary" @onclick="ResetFilters">
+                    <img src="Images/refresh.svg" alt="Reset" class="icon" /> Resetuj
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-container">
+        @if (!filteredTransactions.Any())
         {
-            <option value="@category.Name">@category.Name</option>
+            <p>Nema pronađenih transakcija prema zadatim filterima.</p>
         }
-    </select>
-
-    <label>Tip:</label>
-    <select @bind="SelectedType" class="input">
-        <option value="">Svi</option>
-        <option value="Income">Prihod</option>
-        <option value="Expense">Rashod</option>
-    </select>
-
-    <button class="btn btn-primary" @onclick="ApplyFilters">Primeni</button>
-</div>
-
-<!-- Summary -->
-<div class="analytics-summary">
-    <p><strong>Ukupni Prihodi:</strong> @TotalIncome.ToString("0.00") RSD</p>
-    <p><strong>Ukupni Rashodi:</strong> @TotalExpense.ToString("0.00") RSD</p>
-    <p><strong>Saldo:</strong> @(TotalIncome - TotalExpense).ToString("0.00") RSD</p>
-</div>
-
-<!-- Breakdown by Category -->
-@if (GroupedByCategory.Any())
-{
-    <h4>Raspodela po kategorijama</h4>
-    <ul>
-        @foreach (var item in GroupedByCategory)
+        else
         {
-            <li>@item.Key: @item.Value.ToString("0.00") RSD</li>
-        }
-    </ul>
-}
+            <ul class="transaction-list">
+                @foreach (var t in filteredTransactions)
+                {
+                    <li class="transaction-item @(t.Type == TransactionType.Income ? "income" : "expense")">
+                        <div class="transaction-header">
+                            <h3 class="transaction-title">@t.Name</h3>
+                            <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
+                                @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
+                            </div>
+                        </div>
 
-<!-- Filtered Transactions -->
-@if (FilteredTransactions.Any())
-{
-    <h4>Transakcije</h4>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Datum</th>
-                <th>Naziv</th>
-                <th>Kategorija</th>
-                <th>Tip</th>
-                <th>Iznos</th>
-                <th>Napomena</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var t in FilteredTransactions)
-            {
-                <tr>
-                    <td>@t.Date.ToShortDateString()</td>
-                    <td>@t.Name</td>
-                    <td>@t.Category</td>
-                    <td>@t.Type</td>
-                    <td>@t.Amount.ToString("0.00")</td>
-                    <td>@t.Note</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+                        <div class="transaction-details">
+                            @{
+                                var categoryColor = categories.FirstOrDefault(c => c.Name == t.Category)?.ColorHex ?? "#000000";
+                            }
+
+                            <div>
+                                Kategorija: <span style="color:@categoryColor">@t.Category</span>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(t.Note))
+                            {
+                                <div>Napomena: @t.Note</div>
+                            }
+                        </div>
+
+                        <div class="transaction-footer">
+                            <div class="transaction-date">@t.Date.ToShortDateString()</div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
 
 @code {
-    private DateTime FromDate = DateTime.Today.AddMonths(-1);
-    private DateTime ToDate = DateTime.Today;
-    private string SelectedCategory = "";
-    private string SelectedType = "";
+    // Filter variables
+    private DateTime? startDate = DateTime.Now.AddMonths(-1);
+    private DateTime? endDate = DateTime.Now;
+    private decimal? minAmount;
+    private decimal? maxAmount;
+    private List<string> selectedCategories = new();
+    private string selectedType = "";
 
-    private List<Category> Categories = new();
-    private List<Transaction> FilteredTransactions = new();
-    private Dictionary<string, decimal> GroupedByCategory = new();
-
-    private decimal TotalIncome = 0;
-    private decimal TotalExpense = 0;
+    // Data
+    private List<Transaction> allTransactions = new();
+    private List<Transaction> filteredTransactions = new();
+    private List<Category> categories = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Categories = await categoryService.GetCategories();
-        await ApplyFilters();
+        // Load initial data
+        allTransactions = await TransactionService.GetTransactions();
+        categories = await TransactionService.GetCategories();
+
+        // Apply initial filters
+        ApplyFilters();
     }
 
-    private async Task ApplyFilters()
+    private void ToggleCategory(string categoryName, bool isChecked)
     {
-        var transactions = await transactionService.GetTransactions();
+        if (isChecked && !selectedCategories.Contains(categoryName))
+        {
+            selectedCategories.Add(categoryName);
+        }
+        else if (!isChecked && selectedCategories.Contains(categoryName))
+        {
+            selectedCategories.Remove(categoryName);
+        }
+    }
 
-        FilteredTransactions = transactions
-            .Where(t => t.Date >= FromDate && t.Date <= ToDate)
-            .Where(t => string.IsNullOrEmpty(SelectedCategory) || t.Category == SelectedCategory)
-            .Where(t => string.IsNullOrEmpty(SelectedType) || t.Type.ToString() == SelectedType)
-            .ToList();
+    private void ApplyFilters()
+    {
+        filteredTransactions = allTransactions.Where(t =>
+        {
+            // Date filter
+            bool dateFilter = true;
+            if (startDate.HasValue)
+            {
+                dateFilter = t.Date >= startDate.Value;
+            }
+            if (dateFilter && endDate.HasValue)
+            {
+                dateFilter = t.Date <= endDate.Value;
+            }
 
-        TotalIncome = FilteredTransactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
-        TotalExpense = FilteredTransactions.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
+            // Amount filter
+            bool amountFilter = true;
+            if (minAmount.HasValue)
+            {
+                amountFilter = t.Amount >= minAmount.Value;
+            }
+            if (amountFilter && maxAmount.HasValue)
+            {
+                amountFilter = t.Amount <= maxAmount.Value;
+            }
 
-        GroupedByCategory = FilteredTransactions
-            .GroupBy(t => t.Category)
-            .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
+            // Category filter
+            bool categoryFilter = true;
+            if (selectedCategories.Any())
+            {
+                categoryFilter = selectedCategories.Contains(t.Category);
+            }
+
+            // Type filter
+            bool typeFilter = true;
+            if (!string.IsNullOrEmpty(selectedType))
+            {
+                TransactionType parsedType;
+                if (Enum.TryParse<TransactionType>(selectedType, out parsedType))
+                {
+                    typeFilter = t.Type == parsedType;
+                }
+            }
+
+            return dateFilter && amountFilter && categoryFilter && typeFilter;
+        }).ToList();
+    }
+
+    private void ResetFilters()
+    {
+        startDate = DateTime.Now.AddMonths(-1);
+        endDate = DateTime.Now;
+        minAmount = null;
+        maxAmount = null;
+        selectedCategories.Clear();
+        selectedType = "";
+
+        // Reapply filters
+        ApplyFilters();
     }
 }
