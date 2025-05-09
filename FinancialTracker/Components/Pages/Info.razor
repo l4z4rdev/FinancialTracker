@@ -1,56 +1,117 @@
 ﻿@page "/info"
+@using FinancialTracker.Models
 @inject TransactionService TransactionService
 
-<div class="info-page">
-<h2>📘 O aplikaciji</h2>
-<p>Finansijski Tracker vam omogućava da pratite prihode, rashode i štednju.</p>
+<div class="info-page container">
 
-<h3>Uputstvo</h3>
-<ul>
-    <li>➕ Dodajte, brišite i menjajte transakcije i kategorije na "Transakcije" ili "Kategorije" stranici</li>
-    <li>📊 Pratite balans i pregled po kategorijama</li>
-	<li>📈 Pratite štednju i ciljeve štednje</li>
-	<li>🔒 Podaci se čuvaju lokalno</li>
-    <li>⚙️ Podesite dnevni limit troškova (uskoro)</li>
-</ul>
-<br>
-<h3>🗑️ Brisanje podataka</h3>
-<div class="delete-data">
-    <ul class="delete-buttons-list">
-        <li><button class="btn btn-danger btn-large" @onclick='() => ConfirmDelete("transactions")'>Obriši sve transakcije</button></li>
-        <li><button class="btn btn-danger btn-large" @onclick='() => ConfirmDelete("categories")'>Obriši sve kategorije</button></li>
-        <li><button class="btn btn-danger btn-large" @onclick='() => ConfirmDelete("savings")'>Obriši sve štednje</button></li>
-    </ul>
-</div>
+    <div class="info-section card">
+        <h2>📘 O aplikaciji</h2>
+        <p class="description">Finansijski Tracker vam omogućava da pratite prihode, rashode i štednju na jednostavan i pregledan način.</p>
+    </div>
 
-@if (ShowConfirm)
-{
-    <div class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
+    <div class="info-section card">
+        <h3>📌 Uputstvo</h3>
+        <ul class="info-list">
+            <li>➕ Dodajte, brišite i menjajte transakcije i kategorije na stranici <strong>"Transakcije"</strong> ili <strong>"Kategorije"</strong></li>
+            <li>📊 Pratite balans i pregled po kategorijama</li>
+            <li>📈 Postavite i pratite ciljeve štednje</li>
+            <li>🔒 Podaci se čuvaju lokalno u vašem pregledaču</li>
+            <li>⚙️ Podesite dnevni limit troškova ispod</li>
+            <li>☀️ Menjanje moda, svetli/tamni (uskoro)</li>
+        </ul>
+    </div>
+
+    <div class="info-section card">
+        <h3>💸 Dnevni limit troškova</h3>
+        <p>Postavite maksimalni dnevni limit za rashode u poslednjih 24h. Dobićete upozorenje prilikom dodavanja transakcije ako bi ona prekoračila ovaj limit.</p>
+
+        <EditForm Model="dailyLimit" OnValidSubmit="SaveDailyLimit">
+            <DataAnnotationsValidator />
+
+            <div class="form-row front-row">
+                <div class="form-group">
+                    <label>Iznos limita (RSD)</label>
+                    <InputNumber class="input" @bind-Value="dailyLimit.Amount" />
+                    <ValidationMessage For="@(() => dailyLimit.Amount)" />
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <InputCheckbox class="checkbox" @bind-Value="dailyLimit.IsEnabled" /> Aktiviraj dnevni limit
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <img src="Images/save.svg" alt="Save" class="icon" /> Sačuvaj limit
+            </button>
+        </EditForm>
+
+        @if (limitSaved)
+        {
+            <div class="alert alert-success mt-2">
+                Dnevni limit je uspešno sačuvan!
+            </div>
+        }
+    </div>
+
+    <div class="info-section card danger-card">
+        <h3>🗑️ Brisanje podataka</h3>
+        <p>Ova akcija je nepovratna. Budite sigurni pre nego što nastavite.</p>
+        <div class="delete-buttons">
+            <button class="btn btn-danger" @onclick='() => ConfirmDelete("transactions")'>🧾 Obriši sve transakcije</button>
+            <button class="btn btn-danger" @onclick='() => ConfirmDelete("categories")'>📂 Obriši sve kategorije</button>
+            <button class="btn btn-danger" @onclick='() => ConfirmDelete("savings")'>💰 Obriši sve štednje</button>
+        </div>
+    </div>
+
+    @if (ShowConfirm)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
                     <h3>
                         <img src="Images/warning.svg" alt="Warning" class="icon" />
                         Potvrda brisanja
                     </h3>
-            </div>
-            <div class="modal-body">
-                <p>
-                    Da li ste sigurni da želite da obrišete <strong>@DeleteTargetText</strong>?
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @onclick="() => ShowConfirm = false">Ne</button>
-                <button class="btn btn-danger" @onclick="DeleteConfirmed">Da</button>
+                    <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="() => ShowConfirm = false" />
+                </div>
+                <div class="modal-body">
+                    <p>Da li ste sigurni da želite da obrišete <strong>@DeleteTargetText</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" @onclick="DeleteConfirmed">Da</button>
+                </div>
             </div>
         </div>
-    </div>
-}
+    }
 </div>
+
 
 @code {
     private bool ShowConfirm = false;
     private string DeleteTarget = "";
     private string DeleteTargetText = "";
+    private DailyLimit dailyLimit = new DailyLimit();
+    private bool limitSaved = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        dailyLimit = await TransactionService.GetDailyLimit();
+    }
+
+    private async Task SaveDailyLimit()
+    {
+        await TransactionService.SaveDailyLimit(dailyLimit);
+        limitSaved = true;
+        StateHasChanged(); // odmah osveži UI da se prikaže poruka
+
+        await Task.Delay(3000);
+
+        limitSaved = false;
+        StateHasChanged(); // osveži UI da sakrije poruku
+    }
+
 
     private void ConfirmDelete(string target)
     {

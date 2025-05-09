@@ -2,19 +2,14 @@
 @inject TransactionService TransactionService
 
 <div class="savings-page">
-<main>
+    <main>
         <div class="action-buttons">
-            <button class="btn btn-primary" @onclick="() => OpenAddSavingDialog()">Nova štednja</button>
+            <button class="btn btn-primary" @onclick="() => OpenAddSavingDialog()">
+                <img src="Images/add.svg" alt="Add" class="icon" /> Nova štednja
+            </button>
         </div>
 
-        @if (isLoading)
-        {
-            <div class="loading-container" style="height: 50vh;">
-                <div class="loading-spinner"></div>
-                <p>Učitavanje...</p>
-            </div>
-        }
-        else if (savings == null || !savings.Any())
+        @if (savings == null || !savings.Any())
         {
             <div class="text-center mt-2">
                 <p>Nema aktivnih štednji.</p>
@@ -30,7 +25,7 @@
                         <div class="saving-header">
                             <h3 class="saving-title">@saving.Name</h3>
                             <span class="saving-amount">
-                                @saving.CurrentAmount.ToString("N2") / @saving.TargetAmount.ToString("N2") RSD
+                                @saving.CurrentAmount / @saving.TargetAmount RSD
                             </span>
                         </div>
                         <div class="saving-progress">
@@ -42,6 +37,9 @@
                         <div class="saving-actions">
                             <button class="btn btn-primary btn-sm" @onclick="() => OpenAddFundsDialog(saving)">
                                 <i class="fas fa-plus"></i> Dodaj
+                            </button>
+                            <button class="btn btn-info btn-sm" @onclick="() => OpenRemoveFundsDialog(saving)">
+                                <i class="fas fa-plus"></i> Skolni
                             </button>
                             <button class="btn btn-secondary btn-sm" @onclick="() => OpenEditSavingDialog(saving)">
                                 <i class="fas fa-edit"></i> Izmeni
@@ -64,7 +62,7 @@
                             <div class="saving-header">
                                 <h3 class="saving-title">@saving.Name</h3>
                                 <span class="saving-amount">
-                                    @saving.CurrentAmount.ToString("N2") / @saving.TargetAmount.ToString("N2") RSD
+                                    @saving.CurrentAmount / @saving.TargetAmount RSD
                                 </span>
                             </div>
                             <div class="saving-progress">
@@ -74,6 +72,9 @@
                                 <span class="progress-percent">100%</span>
                             </div>
                             <div class="saving-actions">
+                                <button class="btn btn-info btn-sm" @onclick="() => OpenRemoveFundsDialog(saving)">
+                                    <i class="fas fa-plus"></i> Skolni
+                                </button>
                                 <button class="btn btn-secondary btn-sm" @onclick="() => OpenEditSavingDialog(saving)">
                                     <i class="fas fa-edit"></i> Izmeni
                                 </button>
@@ -93,6 +94,7 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <h3>Nova štednja</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseAddSavingDialog" />
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -114,10 +116,13 @@
                         <div class="form-group">
                             <label for="initialAmount">Početni iznos (opciono)</label>
                             <input id="initialAmount" class="input" type="number" @bind="newSaving.CurrentAmount" />
+                            @if (!string.IsNullOrEmpty(startAmountError))
+                            {
+                                <div class="validation-message">@startAmountError</div>
+                            }
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="CloseAddSavingDialog">Otkaži</button>
                         <button class="btn btn-primary" @onclick="SaveNewSaving">Sačuvaj</button>
                     </div>
                 </div>
@@ -130,6 +135,7 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <h3>Izmena štednje</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseEditSavingDialog" />
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -150,7 +156,6 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="CloseEditSavingDialog">Otkaži</button>
                         <button class="btn btn-primary" @onclick="UpdateSaving">Sačuvaj</button>
                     </div>
                 </div>
@@ -163,9 +168,14 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <h3>Dodavanje iznosa</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseAddFundsDialog" />
                     </div>
                     <div class="modal-body">
                         <p>Dodaj iznos u štednju: <strong>@selectedSaving?.Name</strong></p>
+                        @if (selectedSaving != null)
+                        {
+                            <p>Preostali iznos do cilja: <strong>@GetRemainingAmount(selectedSaving)</strong></p>
+                        }
                         <div class="form-group">
                             <label for="amountToAdd">Iznos</label>
                             <input id="amountToAdd" class="input" type="number" @bind="amountToAdd" />
@@ -176,8 +186,37 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="CloseAddFundsDialog">Otkaži</button>
                         <button class="btn btn-primary" @onclick="AddFundsToSaving">Dodaj</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showRemoveFundsDialog)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>Sklanjanje iznosa</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseRemoveFundsDialog" />
+                    </div>
+                    <div class="modal-body">
+                        <p>Skolni iznos iz štednje: <strong>@selectedSaving?.Name</strong></p>
+                        @if (selectedSaving != null)
+                        {
+                            <p>Ukupan iznos u štednji: <strong>@selectedSaving?.CurrentAmount</strong></p>
+                        }
+                        <div class="form-group">
+                            <label for="amountToRemove">Iznos</label>
+                            <input id="amountToRemove" class="input" type="number" @bind="amountToRemove" />
+                            @if (!string.IsNullOrEmpty(amountError))
+                            {
+                                <div class="validation-message">@amountError</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" @onclick="RemoveFundsFromSaving">Skini</button>
                     </div>
                 </div>
             </div>
@@ -189,39 +228,68 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <h3>Potvrda brisanja</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CancelDeleteSaving" />
                     </div>
                     <div class="modal-body">
                         <p>Da li ste sigurni da želite da obrišete štednju: <strong>@selectedSaving?.Name</strong>?</p>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="CancelDeleteSaving">Otkaži</button>
                         <button class="btn btn-danger" @onclick="DeleteSaving">Obriši</button>
                     </div>
                 </div>
             </div>
         }
-</main>
+
+        @if (showCompletionDialog)
+        {
+            <div class="modal-overlay">
+                <div class="modal-container success-modal">
+                    <div class="modal-header">
+                        <h3>Čestitamo!</h3>
+                        <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseCompletionDialog" />
+                    </div>
+                    <div class="modal-body">
+                        <div class="completion-content">
+                            <img src="Images/success.svg" alt="Success" class="completion-icon" />
+                            <p>Dostigli ste cilj za štednju: <strong>@completedSavingName</strong>!</p>
+                            <p>Ciljani iznos od <strong>@completedSavingTarget RSD</strong> je uspešno sakupljen.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" @onclick="CloseCompletionDialog">U redu</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </main>
 </div>
 
 @code {
     private List<Saving> savings;
-    private bool isLoading = true;
 
     // Dialog control
     private bool showAddSavingDialog = false;
     private bool showEditSavingDialog = false;
     private bool showAddFundsDialog = false;
+    private bool showRemoveFundsDialog = false;
     private bool showDeleteConfirmation = false;
+    private bool showCompletionDialog = false;
 
     // Form data
     private Saving newSaving = new Saving();
     private Saving editSaving = new Saving();
     private Saving selectedSaving;
     private decimal amountToAdd;
+    private decimal amountToRemove;
+
+    // Completion dialog data
+    private string completedSavingName;
+    private decimal completedSavingTarget;
 
     // Validation
     private string savingNameError;
     private string targetAmountError;
+    private string startAmountError;
     private string amountError;
 
     protected override async Task OnInitializedAsync()
@@ -231,9 +299,12 @@
 
     private async Task LoadSavings()
     {
-        isLoading = true;
         savings = await TransactionService.GetSavings();
-        isLoading = false;
+    }
+
+    private decimal GetRemainingAmount(Saving saving)
+    {
+        return saving.TargetAmount - saving.CurrentAmount;
     }
 
     private double GetProgressPercent(Saving saving)
@@ -265,6 +336,12 @@
             await TransactionService.AddSaving(newSaving);
             await LoadSavings();
             showAddSavingDialog = false;
+
+            // Check if saving is already completed when created
+            if (newSaving.CurrentAmount >= newSaving.TargetAmount)
+            {
+                ShowCompletionDialog(newSaving.Name, newSaving.TargetAmount);
+            }
         }
     }
 
@@ -291,9 +368,18 @@
     {
         if (ValidateSaving(editSaving))
         {
+            bool wasCompletedBefore = editSaving.CurrentAmount >= editSaving.TargetAmount;
+            decimal oldTarget = editSaving.TargetAmount;
+
             await TransactionService.UpdateSaving(editSaving);
             await LoadSavings();
             showEditSavingDialog = false;
+
+            // Check if changing the target amount resulted in completion
+            if (!wasCompletedBefore && editSaving.CurrentAmount >= editSaving.TargetAmount)
+            {
+                ShowCompletionDialog(editSaving.Name, editSaving.TargetAmount);
+            }
         }
     }
 
@@ -319,10 +405,60 @@
             return;
         }
 
-        selectedSaving.CurrentAmount += amountToAdd;
+        bool wasCompleted = selectedSaving.CurrentAmount >= selectedSaving.TargetAmount;
+        decimal newAmount = selectedSaving.CurrentAmount + amountToAdd;
+        bool willBeCompleted = newAmount >= selectedSaving.TargetAmount;
+
+        selectedSaving.CurrentAmount = newAmount;
+
         await TransactionService.UpdateSaving(selectedSaving);
         await LoadSavings();
         showAddFundsDialog = false;
+
+        // Show completion dialog if newly completed
+        if (!wasCompleted && willBeCompleted)
+        {
+            ShowCompletionDialog(selectedSaving.Name, selectedSaving.TargetAmount);
+        }
+    }
+
+    // Remove Funds From Saving Dialog
+    private void OpenRemoveFundsDialog(Saving saving)
+    {
+        selectedSaving = saving;
+        amountToRemove = 0;
+        amountError = string.Empty;
+        showRemoveFundsDialog = true;
+    }
+
+    private void CloseRemoveFundsDialog()
+    {
+        showRemoveFundsDialog = false;
+    }
+
+    private async Task RemoveFundsFromSaving()
+    {
+        if (amountToRemove <= 0)
+        {
+            amountError = "Iznos mora biti veći od 0";
+            return;
+        }
+
+        if (amountToRemove > selectedSaving.CurrentAmount)
+        {
+            amountError = "Iznos za skidanje ne može biti veći od trenutnog stanja štednje";
+            return;
+        }
+
+        bool wasCompleted = selectedSaving.CurrentAmount >= selectedSaving.TargetAmount;
+        decimal newAmount = selectedSaving.CurrentAmount - amountToRemove;
+        bool willBeCompleted = newAmount >= selectedSaving.TargetAmount;
+
+        selectedSaving.CurrentAmount = newAmount;
+
+        await TransactionService.UpdateSaving(selectedSaving);
+        await LoadSavings();
+        showRemoveFundsDialog = false;
     }
 
     // Delete Saving
@@ -342,6 +478,19 @@
         await TransactionService.DeleteSaving(selectedSaving.Id);
         await LoadSavings();
         showDeleteConfirmation = false;
+    }
+
+    // Completion Dialog
+    private void ShowCompletionDialog(string savingName, decimal targetAmount)
+    {
+        completedSavingName = savingName;
+        completedSavingTarget = targetAmount;
+        showCompletionDialog = true;
+    }
+
+    private void CloseCompletionDialog()
+    {
+        showCompletionDialog = false;
     }
 
     // Validation
@@ -374,6 +523,21 @@
             targetAmountError = string.Empty;
         }
 
+        if (saving.CurrentAmount < 0)
+        {
+            startAmountError = "Početni iznos mora biti veći ili jednak 0";
+            isValid = false;
+        }
+        else if (saving.CurrentAmount > saving.TargetAmount)
+        {
+            startAmountError = "Početni iznos ne može biti veći od ciljanog iznosa";
+            isValid = false;
+        }
+        else
+        {
+            startAmountError = string.Empty;
+        }
+
         return isValid;
     }
 
@@ -382,5 +546,6 @@
         savingNameError = string.Empty;
         targetAmountError = string.Empty;
         amountError = string.Empty;
+		startAmountError = string.Empty;
     }
 }

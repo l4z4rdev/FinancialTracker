@@ -33,7 +33,7 @@
                         @foreach (var cat in categories)
                         {
                             <div class="category-checkbox">
-                                <input type="checkbox" id="cat-@cat.Id"
+                                <input class="checkbox" type="checkbox" id="cat-@cat.Id"
                                        @onchange="@(e => ToggleCategory(cat.Name, (bool)e.Value))" />
                                 <label for="cat-@cat.Id" style="color:@cat.ColorHex">@cat.Name</label>
                             </div>
@@ -58,7 +58,7 @@
                     <img src="Images/search.svg" alt="Search" class="icon" /> Primeni filtere
                 </button>
                 <button class="btn btn-secondary" @onclick="ResetFilters">
-                    <img src="Images/refresh.svg" alt="Reset" class="icon" /> Resetuj
+                    <img src="Images/refresh.svg" alt="Reset" class="icon" /> Resetuj filtere
                 </button>
             </div>
         </div>
@@ -78,7 +78,7 @@
                         <div class="transaction-header">
                             <h3 class="transaction-title">@t.Name</h3>
                             <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
-                                @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
+                                @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount RSD
                             </div>
                         </div>
 

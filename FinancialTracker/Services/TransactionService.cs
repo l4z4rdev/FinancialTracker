@@ -17,6 +17,14 @@ namespace FinancialTracker.Services
             await _database.CreateTableAsync<Transaction>();
             await _database.CreateTableAsync<Category>();
             await _database.CreateTableAsync<Saving>();
+            await _database.CreateTableAsync<DailyLimit>();
+
+            // Osiguraj da postoji bar jedan zapis za dnevni limit
+            var limits = await _database.Table<DailyLimit>().ToListAsync();
+            if (limits.Count == 0)
+            {
+                await _database.InsertAsync(new DailyLimit { Amount = 5000, IsEnabled = false });
+            }
         }
 
         public async Task<List<Transaction>> GetTransactions()
@@ -30,6 +38,7 @@ namespace FinancialTracker.Services
             await Init();
             await _database.InsertAsync(transaction);
         }
+
         public async Task UpdateTransaction(Transaction transaction)
         {
             await Init();
@@ -51,7 +60,6 @@ namespace FinancialTracker.Services
                 await _database.DeleteAsync(transaction);
             }
         }
-
 
         public async Task<List<Category>> GetCategories()
         {
@@ -87,7 +95,6 @@ namespace FinancialTracker.Services
             }
         }
 
-
         public async Task<List<Saving>> GetSavings()
         {
             await Init();
@@ -120,6 +127,55 @@ namespace FinancialTracker.Services
             {
                 await _database.DeleteAsync(saving);
             }
+        }
+
+        // Novi metodi za dnevni limit
+        public async Task<DailyLimit> GetDailyLimit()
+        {
+            await Init();
+            var limits = await _database.Table<DailyLimit>().ToListAsync();
+            return limits.FirstOrDefault() ?? new DailyLimit { Amount = 5000, IsEnabled = false };
+        }
+
+        public async Task SaveDailyLimit(DailyLimit limit)
+        {
+            await Init();
+            var existingLimit = await GetDailyLimit();
+
+            if (existingLimit.Id == 0)
+            {
+                await _database.InsertAsync(limit);
+            }
+            else
+            {
+                limit.Id = existingLimit.Id;
+                await _database.UpdateAsync(limit);
+            }
+        }
+
+        // Provera da li će transakcija prekoračiti dnevni limit
+        public async Task<(bool IsOverLimit, decimal DailyTotal, decimal Limit)> CheckDailyLimitExceeded(Transaction newTransaction)
+        {
+            if (newTransaction.Type != TransactionType.Expense)
+                return (false, 0, 0);
+
+            var limit = await GetDailyLimit();
+            if (!limit.IsEnabled)
+                return (false, 0, 0);
+
+            // Uzmi period od 24h (trenutni dan)
+            var twentyFourHoursAgo = DateTime.Now.AddHours(-24);
+
+            var recentTransactions = await _database.Table<Transaction>()
+                .Where(t => t.Type == TransactionType.Expense && t.Date >= twentyFourHoursAgo)
+                .ToListAsync();
+
+            decimal totalSpentToday = recentTransactions.Sum(t => t.Amount);
+
+            // Dodaj i novu transakciju
+            decimal potentialTotal = totalSpentToday + newTransaction.Amount;
+
+            return (potentialTotal > limit.Amount, potentialTotal, limit.Amount);
         }
     }
 }
