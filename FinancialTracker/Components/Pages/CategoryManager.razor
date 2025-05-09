@@ -4,75 +4,115 @@
 
 <div class="category-page">
 
-<EditForm Model="newCategory" OnValidSubmit="AddCategory">
-    <div class="space-x-2 mb-4">
-        <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
-        <div class="color-picker-container">
-            <input id="colorPicker" type="color" @bind="newCategory.ColorHex" class="color-picker" />
+    <EditForm Model="newCategory" OnValidSubmit="AddCategory">
+        <div class="space-x-2 mb-4">
+            <InputText @bind-Value="newCategory.Name" class="input" placeholder="Nova kategorija" />
+            <div class="color-picker-container">
+                <input id="colorPicker" type="color" @bind="newCategory.ColorHex" class="color-picker" />
+            </div>
+            <button class="btn btn-primary">
+                <img src="Images/add.svg" alt="Add" class="icon"/>
+            </button>
         </div>
-        <button class="btn btn-primary">
-            <img src="Images/add.svg" alt="Add" class="icon"/>
-        </button>
-    </div>
-</EditForm>
+    </EditForm>
 
-@if (categories == null)
-{
-    <p>Učitavanje...</p>
-}
-else if (!categories.Any())
-{
-    <p>Nema unetih kategorija.</p>
-}
-else
-{
-    <p class="mb-2">Unete kategorije:</p>
+    @if (categories == null)
+    {
+        <p>Učitavanje...</p>
+    }
+    else if (!categories.Any())
+    {
+        <p>Nema unetih kategorija.</p>
+    }
+    else
+    {
+        <p class="mb-2">Unete kategorije:</p>
 
-    <ul class="category-list">
-        @foreach (var cat in categories)
-        {
-            <li class="category-item">
-                <InputText @bind-Value="cat.Name" class="input flex-1 mr-2 mb-0" />
-                <div class="color-picker-container">
-                    <input type="color" @bind="cat.ColorHex" class="color-picker" />
+        <ul class="category-list">
+            @foreach (var cat in categories)
+            {
+                <li class="category-item">
+                    <InputText @bind-Value="cat.Name" class="input flex-1 mr-2 mb-0" />
+                    <div class="color-picker-container">
+                        <input type="color" @bind="cat.ColorHex" class="color-picker" />
+                    </div>
+                    <div class="space-x-2">
+                        <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">
+                            <img src="Images/save.svg" alt="Save" class="icon" />
+                        </button>
+                        <button @onclick="() => ConfirmDeleteCategory(cat)" class="btn btn-danger btn-sm">
+                            <img src="Images/delete.svg" alt="Delete" class="icon" />
+                        </button>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (showDeleteCategoryConfirmation)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Potvrda brisanja kategorije</h3>
+                    <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CancelDeleteCategory" />
                 </div>
-                <div class="space-x-2">
-                    <button @onclick="() => UpdateCategory(cat)" class="btn btn-secondary btn-sm">
-                        <img src="Images/save.svg" alt="Save" class="icon" />
-                    </button>
-                    <button @onclick="() => ConfirmDeleteCategory(cat)" class="btn btn-danger btn-sm">
-                        <img src="Images/delete.svg" alt="Delete" class="icon" />
-                    </button>
+                <div class="modal-body">
+                    <p>Da li ste sigurni da želite da obrišete kategoriju: <strong>@selectedCategory?.Name</strong>?</p>
                 </div>
-            </li>
-        }
-    </ul>
-}
+                <div class="modal-footer">
+                    <button class="btn btn-danger" @onclick="DeleteCategory">Obriši</button>
+                </div>
+            </div>
+        </div>
+    }
 
-@if (showDeleteCategoryConfirmation)
-{
+   @if (showSuccessSave)
+    {
     <div class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>Potvrda brisanja kategorije</h3>
+                <h3>Uspešno sačuvano</h3>
+                    <img src="Images/cancel.svg" alt="Close" class="icon" @onclick="CloseSuccessSave" />
             </div>
             <div class="modal-body">
-                <p>Da li ste sigurni da želite da obrišete kategoriju: <strong>@selectedCategory?.Name</strong>?</p>
+                <p>Kategorija je uspešno sačuvana.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" @onclick="CancelDeleteCategory">Otkaži</button>
-                <button class="btn btn-danger" @onclick="DeleteCategory">Obriši</button>
+                <button class="btn btn-primary" @onclick="CloseSuccessSave">U redu</button>
             </div>
         </div>
     </div>
-}
+    }
+    @if (showDuplicateCategoryWarning)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Duplikat kategorije</h3>
+                    <img src="Images/cancel.svg" alt="Close" class="icon" @onclick="CloseDuplicateCategoryWarning" />
+                </div>
+                <div class="modal-body">
+                    <p>Kategorija sa imenom <strong>@newCategory.Name</strong> već postoji. Odaberite drugo ime.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="CloseDuplicateCategoryWarning">U redu</button>
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @code {
     private Category newCategory = new();
     private List<Category> categories = new();
     private bool showDeleteCategoryConfirmation = false;
+	private bool showSuccessSave = false;
     private Category selectedCategory;
+
+    private bool showDuplicateCategoryWarning = false;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,10 +123,30 @@ else
     {
         if (!string.IsNullOrWhiteSpace(newCategory.Name))
         {
+            // Provera da li postoji kategorija sa istim imenom
+            var existingCategory = categories.FirstOrDefault(c => c.Name.Equals(newCategory.Name, StringComparison.OrdinalIgnoreCase));
+            if (existingCategory != null)
+            {
+                // Pozivanje metode za prikazivanje modala
+                ShowDuplicateCategoryWarning();
+                return;
+            }
+
+            // Dodavanje nove kategorije u bazu podataka
             await TransactionService.AddCategory(newCategory);
             newCategory = new();
             categories = await TransactionService.GetCategories();
         }
+    }
+
+    private void ShowDuplicateCategoryWarning()
+    {
+        showDuplicateCategoryWarning = true;  // Ova vrednost kontroliše prikaz modala
+    }
+
+    private void CloseDuplicateCategoryWarning()
+    {
+        showDuplicateCategoryWarning = false;
     }
 
     private async Task DeleteCategory()
@@ -101,7 +161,18 @@ else
         if (!string.IsNullOrWhiteSpace(category.Name))
         {
             await TransactionService.UpdateCategory(category);
+            ShowSuccessSave();
         }
+    }
+
+    private void ShowSuccessSave()
+    {
+        showSuccessSave = true;
+    }
+
+    private void CloseSuccessSave()
+    {
+        showSuccessSave = false;
     }
 
     private void ConfirmDeleteCategory(Category category)

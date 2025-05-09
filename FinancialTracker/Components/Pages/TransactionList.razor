@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using FinancialTracker.Models
 @using FinancialTracker.Services
 @inject TransactionService TransactionService
 
@@ -7,17 +8,17 @@
         <div class="stats-row">
             <div class="stat-card income-card">
                 <div class="stat-label">Ukupni Prihodi</div>
-                <div class="stat-value income-value">@TotalIncome.ToString("0.00") RSD</div>
+                <div class="stat-value income-value">@TotalIncome RSD</div>
             </div>
 
             <div class="stat-card expense-card">
                 <div class="stat-label">Ukupni Rashodi</div>
-                <div class="stat-value expense-value">@TotalExpense.ToString("0.00") RSD</div>
+                <div class="stat-value expense-value">@TotalExpense RSD</div>
             </div>
         </div>
         <div class="stat-card balance-card">
             <div class="stat-label">Balans</div>
-            <div class="stat-value balance-value">@Balance.ToString("0.00") RSD</div>
+            <div class="stat-value balance-value">@Balance RSD</div>
         </div>
     </div>
 
@@ -26,12 +27,19 @@
     <div class="buttons-row">
         <button class="btn btn-primary" @onclick="OpenAddTransactionDialog">
             <img src="Images/add.svg" alt="Add" class="icon" />
+			Dodaj transakciju
         </button>
 
         <button class="btn btn-secondary" @onclick="async () => await RefreshTransactions()">
             <img src="Images/refresh.svg" alt="Refresh" class="icon" />
+			Osveži
         </button>
     </div>
+
+    @if (!string.IsNullOrEmpty(warningMessage))
+    {
+        <div class="validation-message">@warningMessage</div>
+    }
 
     @if (transactions == null)
     {
@@ -50,7 +58,7 @@
                     <div class="transaction-header">
                         <h3 class="transaction-title">@t.Name</h3>
                         <div class="transaction-amount @(t.Type == TransactionType.Income ? "income" : "expense")">
-                            @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount.ToString("0.00") RSD
+                            @(t.Type == TransactionType.Income ? "+" : "-")@t.Amount RSD
                         </div>
                     </div>
 
@@ -91,9 +99,10 @@
             <div class="modal-container">
                 <div class="modal-header">
                     <h3>Nova transakcija</h3>
+                    <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseAddTransactionDialog" />
                 </div>
                 <div class="modal-body">
-                    <EditForm Model="newTransaction" OnValidSubmit="SaveNewTransaction">
+                    <EditForm Model="newTransaction" OnValidSubmit="ValidateAndSaveTransaction">
                         <DataAnnotationsValidator />
                         <div class="form-row front-row">
                             <div class="form-group">
@@ -111,7 +120,7 @@
                             <div class="form-group">
                                 <label>Kategorija</label>
                                 <InputSelect class="input" @bind-Value="newTransaction.Category">
-                                    <option value="">-- Odaberite kategoriju --</option>
+                                    <option value="">Odaberite</option>
                                     @foreach (var category in categories)
                                     {
                                         <option value="@category.Name">@category.Name</option>
@@ -122,7 +131,6 @@
                             <div class="form-group">
                                 <label>Tip</label>
                                 <InputSelect class="input" @bind-Value="newTransaction.Type">
-                                    <option value="">-- Odaberite tip --</option>
                                     <option value="@TransactionType.Income">Prihod</option>
                                     <option value="@TransactionType.Expense">Rashod</option>
                                 </InputSelect>
@@ -140,8 +148,9 @@
                             <ValidationMessage For="@(() => newTransaction.Note)" />
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseAddTransactionDialog">Otkaži</button>
-                            <button type="submit" class="btn btn-primary">Sačuvaj</button>
+                            <button type="submit" class="btn btn-primary">
+                                <img src="Images/save.svg" alt="Save" class="icon" />
+                            </button>
                         </div>
                     </EditForm>
                 </div>
@@ -155,9 +164,10 @@
             <div class="modal-container">
                 <div class="modal-header">
                     <h3>Izmena transakcije</h3>
+                    <img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CloseEditTransactionDialog" />
                 </div>
                 <div class="modal-body">
-                    <EditForm Model="editTransaction" OnValidSubmit="UpdateTransaction">
+                    <EditForm Model="editTransaction" OnValidSubmit="ValidateAndUpdateTransaction">
                         <DataAnnotationsValidator />
 
                         <div class="form-row front-row">
@@ -177,7 +187,7 @@
                             <div class="form-group">
                                 <label>Kategorija</label>
                                 <InputSelect class="input" @bind-Value="editTransaction.Category">
-                                    <option value="">-- Odaberite kategoriju --</option>
+                                    <option value="">Odaberite</option>
                                     @foreach (var category in categories)
                                     {
                                         <option value="@category.Name">@category.Name</option>
@@ -188,7 +198,6 @@
                             <div class="form-group">
                                 <label>Tip</label>
                                 <InputSelect class="input" @bind-Value="editTransaction.Type">
-                                    <option value="">-- Odaberite tip --</option>
                                     <option value="@TransactionType.Income">Prihod</option>
                                     <option value="@TransactionType.Expense">Rashod</option>
                                 </InputSelect>
@@ -209,8 +218,9 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="CloseEditTransactionDialog">Otkaži</button>
-                            <button type="submit" class="btn btn-primary">Sačuvaj</button>
+                            <button type="submit" class="btn btn-primary">
+                                <img src="Images/save.svg" alt="Save" class="icon" />
+                            </button>
                         </div>
                     </EditForm>
                 </div>
@@ -218,21 +228,45 @@
         </div>
     }
 
-
-
     @if (showDeleteTransactionConfirmation)
     {
         <div class="modal-overlay">
             <div class="modal-container">
                 <div class="modal-header">
                     <h3>Potvrda brisanja transakcije</h3>
+					<img src="Images/cancel.svg" alt="Cancel" class="icon" @onclick="CancelDeleteTransaction" />
                 </div>
                 <div class="modal-body">
                     <p>Da li ste sigurni da želite da obrišete transakciju: <strong>@selectedTransaction?.Name</strong>?</p>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CancelDeleteTransaction">Otkaži</button>
                     <button class="btn btn-danger" @onclick="DeleteTransaction">Obriši</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showDailyLimitWarning)
+    {
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>
+                        <img src="Images/warning.svg" alt="Warning" class="icon" />
+                        Upozorenje o dnevnom limitu
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    <p>Ova transakcija će prekoračiti vaš dnevni limit za rashode!</p>
+                    <div class="limit-info">
+                        <div>Trenutna potrošnja (24h): <strong>@dailyExpenseTotal.ToString("F2") RSD</strong></div>
+                        <div>Dnevni limit: <strong>@dailyLimitAmount.ToString("F2") RSD</strong></div>
+                    </div>
+                    <p>Da li želite da nastavite sa dodavanjem transakcije?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CancelLimitWarning">Odustani</button>
+                    <button class="btn btn-primary" @onclick="ConfirmDespiteLimit">Nastavi</button>
                 </div>
             </div>
         </div>
@@ -245,11 +279,15 @@
     private bool showDeleteTransactionConfirmation = false;
     private Transaction selectedTransaction;
 
-    private bool isLoading = true;
+    private string warningMessage;
 
     // Dialog control
     private bool showAddTransactionDialog = false;
     private bool showEditTransactionDialog = false;
+    private bool showDailyLimitWarning = false;
+    private decimal dailyExpenseTotal = 0;
+    private decimal dailyLimitAmount = 0;
+    private bool isAddingNewTransaction = true;
 
     // Form data
     private Transaction newTransaction = new Transaction() { Date = DateTime.Now };
@@ -299,6 +337,13 @@
 
     private void OpenAddTransactionDialog()
     {
+        if (categories == null || !categories.Any())
+        {
+            warningMessage = "Ne možete dodati transakciju jer nema dostupnih kategorija.";
+            return;
+        }
+
+        warningMessage = null;
         newTransaction = new Transaction() { Date = DateTime.Now };
         showAddTransactionDialog = true;
     }
@@ -306,6 +351,25 @@
     private void CloseAddTransactionDialog()
     {
         showAddTransactionDialog = false;
+    }
+
+    // Provera dnevnog limita pre čuvanja
+    private async Task ValidateAndSaveTransaction()
+    {
+        isAddingNewTransaction = true;
+        var limitResult = await TransactionService.CheckDailyLimitExceeded(newTransaction);
+        
+        if (limitResult.IsOverLimit)
+        {
+            dailyExpenseTotal = limitResult.DailyTotal;
+            dailyLimitAmount = limitResult.Limit;
+            showDailyLimitWarning = true;
+            showAddTransactionDialog = false;
+        }
+        else
+        {
+            await SaveNewTransaction();
+        }
     }
 
     private async Task SaveNewTransaction()
@@ -336,6 +400,25 @@
         showEditTransactionDialog = false;
     }
 
+    // Provera dnevnog limita pre ažuriranja
+    private async Task ValidateAndUpdateTransaction()
+    {
+        isAddingNewTransaction = false;
+        var limitResult = await TransactionService.CheckDailyLimitExceeded(editTransaction);
+        
+        if (limitResult.IsOverLimit)
+        {
+            dailyExpenseTotal = limitResult.DailyTotal;
+            dailyLimitAmount = limitResult.Limit;
+            showDailyLimitWarning = true;
+            showEditTransactionDialog = false;
+        }
+        else
+        {
+            await UpdateTransaction();
+        }
+    }
+
     private async Task UpdateTransaction()
     {
         await TransactionService.UpdateTransaction(editTransaction);
@@ -343,10 +426,35 @@
         showEditTransactionDialog = false;
     }
 
+    private void CancelLimitWarning()
+    {
+        showDailyLimitWarning = false;
+        if (isAddingNewTransaction)
+        {
+            showAddTransactionDialog = true;
+        }
+        else
+        {
+            showEditTransactionDialog = true;
+        }
+    }
+
+    private async Task ConfirmDespiteLimit()
+    {
+        showDailyLimitWarning = false;
+        
+        if (isAddingNewTransaction)
+        {
+            await SaveNewTransaction();
+        }
+        else
+        {
+            await UpdateTransaction();
+        }
+    }
+
     private async Task LoadTransactions()
     {
-        isLoading = true;
         transactions = await TransactionService.GetTransactions();
-        isLoading = false;
     }
 }
